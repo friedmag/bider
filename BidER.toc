@@ -1,0 +1,7 @@
+## Interface: 30100
+## Title: BidER
+## Author: Quilderaumo
+## Notes: Handles bids/DKP system for Eternal Retribution
+## Email: chrisqeld@gmail.com
+## URL: 
+BidER.xml
