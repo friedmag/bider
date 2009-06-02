@@ -151,6 +151,7 @@ local function DumpBidInfo()
   local player = UnitName("player")
   for i,v in ipairs(biditems) do
     if v.bids == nil or #v.bids == 0 then count_msg = "no bids"
+    elseif #v.bids == 1 then count_msg = #v.bids .. " bid"
     else count_msg = #v.bids .. " bids" end
     PostChat(v.item_link .. "x" .. v.count .. " -- " .. count_msg)
   end
