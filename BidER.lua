@@ -180,13 +180,19 @@ function events:StartAuctionCommand(args)
 end
 
 function events:DKPCommand(args)
-  local old_value
+  local old_value, tmp_value
   local name,value = strsplit(" ", args)
 
   if dkp[name] == nil then dkp[name] = {} end
   if dkp[name].total ~= nil then old_value = dkp[name].total end
-  dkp[name].total = tonumber(value)
+  tmp_value = tonumber(value)
 
+  if tmp_value == nil then
+    Print("Invalid DKP value for " .. name)
+    return
+  end
+
+  dkp[name].total = tmp_value
   if dkp[name].total ~= old_value then
     local was_str = ""
     if old_value ~= nil then was_str = " (was: " .. old_value .. ")"end
