@@ -281,6 +281,13 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
   if msg == "cancel" then
     -- TODO: Cancel all bids
     return
+  elseif msg == "dkp" then
+    if dkp[from] == nil or dkp[from].total == 0 then
+      PostMsg("You have no DKP.", from)
+    else
+      PostMsg("You have " .. dkp[from].total .. " DKP.", from)
+    end
+    return
   end
   local found
   for item, value in string.gmatch(msg, "(" .. link_regex .. ")" .. "([^|]*)") do
