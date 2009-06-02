@@ -180,19 +180,18 @@ function events:StartAuctionCommand(args)
 end
 
 function events:DKPCommand(args)
-  local old_value, tmp_value
+  local old_value
   local name,value = strsplit(" ", args)
 
   if dkp[name] == nil then dkp[name] = {} end
   if dkp[name].total ~= nil then old_value = dkp[name].total end
-  tmp_value = tonumber(value)
+  dkp[name].total = tonumber(value)
 
-  if tmp_value == nil then
+  if dkp[name].total == nil then
     Print("Invalid DKP value for " .. name)
     return
   end
 
-  dkp[name].total = tmp_value
   if dkp[name].total ~= old_value then
     local was_str = ""
     if old_value ~= nil then was_str = " (was: " .. old_value .. ")"end
@@ -282,7 +281,7 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
     -- TODO: Cancel all bids
     return
   elseif msg == "dkp" then
-    if dkp[from] == nil or dkp[from].total == 0 then
+    if dkp[from] == nil or dkp[from].total == nil or dkp[from].total == 0 then
       PostMsg("You have no DKP.", from)
     else
       PostMsg("You have " .. dkp[from].total .. " DKP.", from)
