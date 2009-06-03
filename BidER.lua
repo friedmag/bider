@@ -15,7 +15,6 @@ local loots = BidER_Loots
 local frame
 local events = {}
 local biditems = {}
-local buttons = {}
 local pick_active = false
 local auction_active = false
 local link_regex = "|c%x+|H[^|]+|h%[[^|]+%]|h|r"
@@ -98,15 +97,25 @@ end
 
 local function AddLink(item_link, count)
   if pick_active then
-    for i_link,v in pairs(biditems) do
-      if i_link == item_link then
-        v.count = v.count + count
-        Print("Updated item: " .. item_link .. "x" .. v.count)
-        return
-      end
+    if biditems[item_link] ~= nil then
+      local v = biditems[item_link]
+      v.count = v.count + count
+      Print("Updated item: " .. item_link .. "x" .. v.count)
+      return
     end
     biditems[item_link] = {bids={}, count=count}
     Print("Adding item: " .. item_link .. "x" .. count)
+  end
+end
+
+local function RemoveLink(item_link)
+  if pick_active then
+    if biditems[item_link] == nil then
+      Print("Item " .. item_link .. " hasn't been picked, anyway.")
+    else
+      biditems[item_link] = nil
+      Print("Removed item " .. item_link)
+    end
   end
 end
 
