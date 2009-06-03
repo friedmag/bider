@@ -211,6 +211,7 @@ function events:EndAuctionCommand(args)
   auction_active = false
   frame:UnregisterEvent("CHAT_MSG_WHISPER")
   PostChat("Bidding is now closed!")
+  events:StatusCommand("")
 end
 
 local function BidText(bid)
