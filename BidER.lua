@@ -182,7 +182,9 @@ local function DumpBidInfo()
 end
 
 function events:AnnounceCommand(args)
-  DumpBidInfo()
+  if auction_active then
+    DumpBidInfo()
+  end
 end
 
 function events:StartAuctionCommand(args)
