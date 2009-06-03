@@ -18,6 +18,8 @@ local biditems = {}
 local pick_active = false
 local auction_active = false
 local link_regex = "|c%x+|H[^|]+|h%[[^|]+%]|h|r"
+local link_regex_p = "(" .. link_regex .. ")"
+local sep_regex = "[-_ :;|!]"
 
 -------------------
 -- Helper Functions
@@ -153,6 +155,10 @@ function events:SlashCommand(args, ...)
     BidER_Event("StartAuctionCommand", args)
   elseif cmd == "end" then
     BidER_Event("EndAuctionCommand", args)
+  elseif cmd == "bid" or cmd == "edit" then
+    BidER_Event("EditCommand", args)
+  elseif cmd:match('^st') then
+    BidER_Event("StatusCommand", args)
   elseif cmd:match('^ann') then
     BidER_Event("AnnounceCommand", args)
   else
@@ -195,6 +201,52 @@ function events:StartAuctionCommand(args)
   DumpBidInfo()
 end
 
+function events:EndAuctionCommand(args)
+  if not auction_active then
+    Print("No auction is active!")
+    return
+  end
+  auction_active = false
+  frame:UnregisterEvent("CHAT_MSG_WHISPER")
+  PostChat("Bidding is now closed!")
+end
+
+local function BidText(bid)
+  return (bid.win and "WIN" or bid.amount)
+end
+
+function events:StatusCommand(args)
+  for item,v in biditems do
+    Print("Bids on " .. item)
+    for who,bid in v.bids do
+      Print("\t" .. who .. " - " .. BidText(bid))
+    end
+    Print("End of bids.")
+  end
+end
+
+function events:EditCommand(args)
+  for who,link,amount in args:gmatch("(%a+)" .. sep_regex .. "?" .. link_regex_p .. sep_regex .. "?(%w+)") do
+    if biditems[link] == nil then
+      Print("Not taking bids on " .. link)
+    else
+      if tonumber(amount) == nil and amount ~= "win" then
+        Print("Invalid bid amount '" .. amount .. "' - must be a number or 'win'")
+      else
+        local bid, toset, toprint = nil, {}, ""
+        if tonumber(amount) == nil then toset.win = true else toset.amount = tonumber(amount) end
+
+        local bid = biditems[link][who]
+        if bid ~= nil then
+          toprint = " (old bid: " .. BidText(bid) .. ")"
+        end
+        biditems[link][who] = toset
+        Print("Updated bid to " .. BidText(bid) .. " for " .. who .. " on " .. link .. toprint)
+      end
+    end
+  end
+end
+
 function events:DKPCommand(args)
   local old_value
 
@@ -203,7 +255,7 @@ function events:DKPCommand(args)
       Print("DKP for " .. name .. " - " .. v.total)
     end
   else
-    for name,value in args:gmatch("([A-Za-z]+)[-=:; ]([0-9]+)") do
+    for name,value in args:gmatch("(%a+)" .. sep_regex .. "(%d+)") do
       if dkp[name] == nil then dkp[name] = {} end
       if dkp[name].total ~= nil then old_value = dkp[name].total else old_value = nil end
       dkp[name].total = tonumber(value)
@@ -300,7 +352,7 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
     end
     return
   end
-  for item, value in string.gmatch(msg, "(" .. link_regex .. ")" .. "([^|]*)") do
+  for item, value in string.gmatch(msg, link_regex_p .. "([^|]*)") do
     local v = biditems[item]
     if v == nil then
       PostMsg("There is no auction in progress for " .. item, from)
