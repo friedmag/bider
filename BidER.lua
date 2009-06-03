@@ -196,7 +196,7 @@ function events:DKPCommand(args)
   else
     for name,value in args:gmatch("([A-Za-z]+)[-=:; ]([0-9]+)") do
       if dkp[name] == nil then dkp[name] = {} end
-      if dkp[name].total ~= nil then old_value = dkp[name].total end
+      if dkp[name].total ~= nil then old_value = dkp[name].total else old_value = nil end
       dkp[name].total = tonumber(value)
 
       if dkp[name].total ~= old_value then
