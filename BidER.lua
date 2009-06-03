@@ -219,32 +219,31 @@ local function BidText(bid)
 end
 
 function events:StatusCommand(args)
-  for item,v in biditems do
+  for item,v in pairs(biditems) do
     Print("Bids on " .. item)
-    for who,bid in v.bids do
-      Print("\t" .. who .. " - " .. BidText(bid))
+    for who,bid in pairs(v.bids) do
+      Print("     " .. who .. " - " .. BidText(bid))
     end
     Print("End of bids.")
   end
 end
 
 function events:EditCommand(args)
-  for who,link,amount in args:gmatch("(%a+)" .. sep_regex .. "?" .. link_regex_p .. sep_regex .. "?(%w+)") do
+  for who,link,amount in args:gmatch("(%a+)" .. sep_regex .. "*" .. link_regex_p .. sep_regex .. "*(%w+)") do
     if biditems[link] == nil then
       Print("Not taking bids on " .. link)
     else
       if tonumber(amount) == nil and amount ~= "win" then
         Print("Invalid bid amount '" .. amount .. "' - must be a number or 'win'")
       else
-        local bid, toset, toprint = nil, {}, ""
-        if tonumber(amount) == nil then toset.win = true else toset.amount = tonumber(amount) end
+        local old_bid, new_bid, toprint = biditems[link].bids[who], {}, ""
+        if tonumber(amount) == nil then new_bid.win = true else new_bid.amount = tonumber(amount) end
 
-        local bid = biditems[link][who]
-        if bid ~= nil then
-          toprint = " (old bid: " .. BidText(bid) .. ")"
+        if old_bid ~= nil then
+          toprint = " (old bid: " .. BidText(old_bid) .. ")"
         end
-        biditems[link][who] = toset
-        Print("Updated bid to " .. BidText(bid) .. " for " .. who .. " on " .. link .. toprint)
+        biditems[link].bids[who] = new_bid
+        Print("Updated bid to " .. BidText(new_bid) .. " for " .. who .. " on " .. link .. toprint)
       end
     end
   end
@@ -355,7 +354,7 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
     end
     return
   end
-  for item, value in string.gmatch(msg, link_regex_p .. "([^|]*)") do
+  for item, value in string.gmatch(msg, link_regex_p .. "[^|0-9A-Za-z]*([^|]*)") do
     local v = biditems[item]
     if v == nil then
       PostMsg("There is no auction in progress for " .. item, from)
