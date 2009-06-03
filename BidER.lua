@@ -78,7 +78,7 @@ end
 -----------------
 function events:OnLoad()
   Print("Loaded " .. VERSION)
-  frame = BidERHoverFrame
+  frame = CreateFrame("FRAME", nil, UIParent)
   frame:SetScript("OnEvent", BidER_SendEvent)
   hooksecurefunc("ChatFrame_OnHyperlinkShow", function(...) BidER_Event("HyperlinkShow", ...) end)
 end
@@ -312,3 +312,6 @@ end
 ----------------------
 -- Button/UI Functions
 ----------------------
+
+-- Start 'er up
+events:OnLoad()
