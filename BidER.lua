@@ -8,10 +8,8 @@
 local VERSION = "1.0"
 
 -- Data:
-BidER_DKP = {} -- Stores player DKP amounts
-BidER_Loots = {} -- Stores loots taken by players
-local dkp = BidER_DKP
-local loots = BidER_Loots
+local dkp
+local loots
 local frame
 local events = {}
 local biditems = {}
@@ -84,9 +82,9 @@ end
 -- Initialization
 -----------------
 function events:OnLoad()
-  Print("Loaded " .. VERSION)
   frame = CreateFrame("FRAME", nil, UIParent)
   frame:SetScript("OnEvent", BidER_SendEvent)
+  frame:RegisterEvent("ADDON_LOADED")
   hooksecurefunc("ChatFrame_OnHyperlinkShow", function(...) BidER_Event("HyperlinkShow", ...) end)
 end
 
@@ -136,6 +134,16 @@ end
 -----------------
 -- Hook Functions
 -----------------
+function events:ADDON_LOADED(addon, ...)
+  if addon == "BidER" then
+    if BidER_DKP == nil then BidER_DKP = {} end
+    if BidER_Loots == nil then BidER_Loots = {} end
+    dkp = BidER_DKP
+    loots = BidER_Loots
+    Print("Loaded " .. VERSION)
+  end
+end
+
 function events:SlashCommand(args, ...)
   local space, cmd
   space = args:find(" ")
