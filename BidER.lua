@@ -56,6 +56,10 @@ local function count_pairs(tab)
   return count
 end
 
+local function my_select(n, ...)
+  return arg[n]
+end
+
 local function BidER_SendEvent(self, event, ...)
   if events[event] == nil then
     error("Invalid BidER event: " .. event)
@@ -264,6 +268,16 @@ function events:DKPCommand(args)
     for name,v in pairs(dkp) do
       Print("DKP for " .. name .. " - " .. v.total)
     end
+  elseif args:match("^[-+]?%d+$") then
+    local players, value = {}, tonumber(args)
+    for i=1,GetNumRaidMembers() do
+      tinsert(players, my_select(1, GetRaidRosterInfo(i)))
+    end
+    for i,name in ipairs(players) do
+      if dkp[name] == nil then dkp[name] = {total=value}
+      else dkp[name].total = dkp[name].total + value end
+    end
+    Print("Added " .. value .. " DKP for all raid members")
   else
     for name,value in args:gmatch("(%a+)" .. sep_regex .. "(%d+)") do
       if dkp[name] == nil then dkp[name] = {} end
