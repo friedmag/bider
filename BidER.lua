@@ -168,11 +168,11 @@ function events:SlashCommand(args, ...)
   elseif cmd == "end" then
     BidER_Event("EndAuctionCommand", args)
   elseif cmd == "bid" or cmd == "edit" then
-    BidER_Event("EditCommand", args)
+    BidER_Event("EditAuctionCommand", args)
   elseif cmd:match('^st') then
-    BidER_Event("StatusCommand", args)
+    BidER_Event("StatusAuctionCommand", args)
   elseif cmd:match('^ann') then
-    BidER_Event("AnnounceCommand", args)
+    BidER_Event("AnnounceAuctionCommand", args)
   else
     Print("Unknown command: " .. cmd)
     PrintHelp()
@@ -181,7 +181,6 @@ end
 
 local function DumpBidInfo()
   local count_msg = ""
-  local player = UnitName("player")
   for item_link,v in pairs(biditems) do
     local bid_count = count_pairs(v.bids)
     if bid_count == 0 then count_msg = "no bids"
@@ -189,11 +188,16 @@ local function DumpBidInfo()
     else count_msg = bid_count .. " bids" end
     PostChat(item_link .. "x" .. v.count .. " -- " .. count_msg)
   end
-  PostChat("To bid on any item: /w " .. player .. " <link> <bid amount>")
-  PostChat("To see your current DKP: /w " .. player .. " dkp")
+  if auction_active then
+    local player = UnitName("player")
+    PostChat("To bid on any item: /w " .. player .. " <link> <bid amount>")
+    PostChat("To see your current DKP: /w " .. player .. " dkp")
+  else
+    PostChat("The auction has been closed.  Results will be announced soon.")
+  end
 end
 
-function events:AnnounceCommand(args)
+function events:AnnounceAuctionCommand(args)
   if auction_active then
     DumpBidInfo()
   end
@@ -223,14 +227,14 @@ function events:EndAuctionCommand(args)
   auction_active = false
   frame:UnregisterEvent("CHAT_MSG_WHISPER")
   PostChat("Bidding is now closed!")
-  events:StatusCommand("")
+  events:StatusAuctionCommand("")
 end
 
 local function BidText(bid)
   return (bid.win and "WIN" or bid.amount)
 end
 
-function events:StatusCommand(args)
+function events:StatusAuctionCommand(args)
   for item,v in pairs(biditems) do
     Print("Bids on " .. item)
     for who,bid in pairs(v.bids) do
@@ -240,7 +244,7 @@ function events:StatusCommand(args)
   end
 end
 
-function events:EditCommand(args)
+function events:EditAuctionCommand(args)
   for who,link,amount in args:gmatch("(%a+)" .. sep_regex .. "*" .. link_regex_p .. sep_regex .. "*(%w+)") do
     if biditems[link] == nil then
       Print("Not taking bids on " .. link)
