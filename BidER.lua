@@ -159,20 +159,22 @@ function events:SlashCommand(args, ...)
   end
   if cmd == "" or cmd == "help" then
     PrintHelp()
-  elseif cmd == "dkp" then
-    BidER_Event("DKPCommand", args)
-  elseif cmd == "pick" then
-    BidER_Event("PickCommand", args)
   elseif cmd == "start" then
     BidER_Event("StartAuctionCommand", args)
   elseif cmd == "end" then
     BidER_Event("EndAuctionCommand", args)
-  elseif cmd == "bid" or cmd == "edit" then
+  elseif cmd:match('^d') then
+    BidER_Event("DKPCommand", args)
+  elseif cmd:match('^p') then
+    BidER_Event("PickCommand", args)
+  elseif cmd:match('^b') or cmd:match('^e') then
     BidER_Event("EditAuctionCommand", args)
-  elseif cmd:match('^st') then
+  elseif cmd:match('^s') then
     BidER_Event("StatusAuctionCommand", args)
-  elseif cmd:match('^ann') then
+  elseif cmd:match('^a') then
     BidER_Event("AnnounceAuctionCommand", args)
+  elseif cmd:match('^f') then
+    BidER_Event("FinalizeAuctionCommand", args)
   else
     Print("Unknown command: " .. cmd)
     PrintHelp()
@@ -228,6 +230,34 @@ function events:EndAuctionCommand(args)
   frame:UnregisterEvent("CHAT_MSG_WHISPER")
   PostChat("Bidding is now closed!")
   events:StatusAuctionCommand("")
+end
+
+function events:FinalizeAuctionCommand(args)
+  if auction_active then
+    events:EndAuctionCommand()
+  end
+  for item,v in pairs(biditems) do
+    if next(v.bids) == nil then
+      Print("Disenchant for " .. item)
+    else
+      local bidders = {}
+      for who,bid in pairs(v.bids) do
+        if bid.win then tinsert(bidders, 1, {who=who, amount=true})
+        else
+          tinsert(bidders, {who=who, amount=bid.amount})
+          for i,other in ipairs(bidders) do
+            if other.amount ~= true and bid.amount > other.amount then
+              tinsert(bidders, i, tremove(bidders))
+              break
+            end
+          end
+        end
+      end
+      for count=1,v.count do
+        PostChat("Winner for " .. item .. " - " .. bidders[count].who)
+      end
+    end
+  end
 end
 
 local function BidText(bid)
