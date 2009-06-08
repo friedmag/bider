@@ -6,6 +6,7 @@
 
 -- Constants:
 local VERSION = "1.0"
+local LOOT_THRESHOLD = 3
 
 -- Data:
 local dkp
@@ -161,6 +162,8 @@ function events:SlashCommand(args, ...)
   end
   if cmd == "" or cmd == "help" then
     PrintHelp()
+  elseif cmd == "init" then
+    BidER_Event("InitCommand", args)
   elseif cmd == "start" then
     BidER_Event("StartAuctionCommand", args)
   elseif cmd == "end" then
@@ -201,6 +204,16 @@ local function DumpBidInfo()
   else
     PostChat("The auction has been closed.  Results will be announced soon.")
   end
+end
+
+function events:InitCommand(args)
+  if not IsRaidLeader() then
+    Print("You are not the raid leader, so this probably won't work...")
+  end
+  local master = args
+  if args == nil or args == '' then master = UnitName("player") end
+  SetLootMethod('master', master)
+  SetLootThreshold(LOOT_THRESHOLD)
 end
 
 function events:EnchanterCommand(who)
@@ -358,7 +371,7 @@ function events:PickCommand(args)
       Print("item picking now in progress.")
     end
     if opt1 == "loot" then
-      local threshold = 3
+      local threshold = LOOT_THRESHOLD
       if opt2 ~= nil then threshold = tonumber(opt2) end
       for i=1,GetNumLootItems() do
         local _, _, quantity, rarity, _ = GetLootSlotInfo(i)
