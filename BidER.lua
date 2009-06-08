@@ -430,6 +430,16 @@ function events:HyperlinkShow(ref, link_text, item_link, button, ...)
 	end
 end
 
+local function GetDKP(who, msg)
+  if dkp[who] == nil or dkp[who].total == nil or dkp[who].total == 0 then
+    if msg then PostMsg("You have no DKP.", who) end
+    return 0
+  else
+    if msg then PostMsg("You have " .. dkp[who].total .. " DKP.", who) end
+    return dkp[who].total
+  end
+end
+
 local function CancelBid(who, item, bids)
   local old_value
   if bids[who] ~= nil then
@@ -447,6 +457,11 @@ local function PlaceBid(who, item, bids, amount)
   if bids[who] ~= nil then
     old_value, bids[who] = bids[who], nil
   end
+  if GetDKP(who, false) < amount then
+    PostMsg("You do not have enough DKP for that bid.", who)
+    GetDKP(who, true)
+    return
+  end
   bids[who] = {amount=amount}
   if old_value then
     tosend = "Updated bid for " .. item .. " from " .. old_value.amount .. " to " .. amount
@@ -462,11 +477,7 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
     -- TODO: Cancel all bids
     return
   elseif msg == "dkp" then
-    if dkp[from] == nil or dkp[from].total == nil or dkp[from].total == 0 then
-      PostMsg("You have no DKP.", from)
-    else
-      PostMsg("You have " .. dkp[from].total .. " DKP.", from)
-    end
+    GetDKP(from, true)
     return
   end
   for item, value in string.gmatch(msg, link_regex_p .. "[^|0-9A-Za-z]*([^|]*)") do
