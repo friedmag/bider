@@ -178,8 +178,10 @@ function events:SlashCommand(args, ...)
     BidER_Event("EditAuctionCommand", args)
   elseif cmd:match('^s') then
     BidER_Event("StatusAuctionCommand", args)
-  elseif cmd:match('^a') then
+  elseif cmd:match('^an') then
     BidER_Event("AnnounceAuctionCommand", args)
+  elseif cmd:match('^as') then
+    BidER_Event("AssignAuctionCommand", args)
   elseif cmd:match('^f') then
     BidER_Event("FinalizeAuctionCommand", args)
   else
@@ -283,6 +285,36 @@ function events:FinalizeAuctionCommand(args)
         tinsert(bidwinners[item], bidders[count].who)
         PostChat("Winner for " .. item .. " - " .. bidders[count].who)
       end
+    end
+  end
+end
+
+function events:AssignAuctionCommand(args)
+  local _, looter, _ = GetLootMethod()
+  if looter ~= 0 then
+    Print('Cannot assign loot - master loot not active, or you are not master looter.')
+    return
+  end
+  for item,v in pairs(bidwinners) do
+    local found_item = false
+    for i=1, GetNumLootItems() do
+      if LootSlotIsItem(i) and GetLootSlotLink(i) == item then
+        for _,who in ipairs(v) do
+          local found_who = false
+          for j=1, 40 do
+            if GetMasterLootCandidate(j) == who then
+              GiveMasterLoot(i, j)
+              Print("Gave " .. item .. " to " .. who)
+            end
+          end
+          if not found_who then
+            Print("Could not find " .. who .. " to give " .. item)
+          end
+        end
+      end
+    end
+    if not found_item then
+      Print("Could not find " .. item .. " in loot list")
     end
   end
 end
