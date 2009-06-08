@@ -11,6 +11,7 @@ local VERSION = "1.0"
 local dkp
 local loots
 local frame
+local settings = {enchanter=""}
 local events = {}
 local biditems = {}
 local pick_active = false
@@ -163,6 +164,8 @@ function events:SlashCommand(args, ...)
     BidER_Event("StartAuctionCommand", args)
   elseif cmd == "end" then
     BidER_Event("EndAuctionCommand", args)
+  elseif cmd:match('^e') then
+    BidER_Event("EnchanterCommand", args)
   elseif cmd:match('^d') then
     BidER_Event("DKPCommand", args)
   elseif cmd:match('^p') then
@@ -196,6 +199,13 @@ local function DumpBidInfo()
     PostChat("To see your current DKP: /w " .. player .. " dkp")
   else
     PostChat("The auction has been closed.  Results will be announced soon.")
+  end
+end
+
+function events:EnchanterCommand(who)
+  if who ~= nil and who ~= "" then
+    settings.enchanter = who
+    Print("Designated Disenchanter = " .. who)
   end
 end
 
