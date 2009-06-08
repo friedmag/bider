@@ -14,6 +14,7 @@ local frame
 local settings = {enchanter=""}
 local events = {}
 local biditems = {}
+local bidwinners = {}
 local pick_active = false
 local auction_active = false
 local link_regex = "|c%x+|H[^|]+|h%[[^|]+%]|h|r"
@@ -246,7 +247,9 @@ function events:FinalizeAuctionCommand(args)
   if auction_active then
     events:EndAuctionCommand()
   end
+  bidwinners = {}
   for item,v in pairs(biditems) do
+    bidwinners[item] = {}
     if next(v.bids) == nil then
       Print("Disenchant for " .. item)
     else
@@ -264,6 +267,7 @@ function events:FinalizeAuctionCommand(args)
         end
       end
       for count=1,v.count do
+        tinsert(bidwinners[item], bidders[count].who)
         PostChat("Winner for " .. item .. " - " .. bidders[count].who)
       end
     end
