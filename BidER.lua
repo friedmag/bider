@@ -266,7 +266,7 @@ function events:FinalizeAuctionCommand(args)
   for item,v in pairs(biditems) do
     bidwinners[item] = {}
     if next(v.bids) == nil then
-      Print("Disenchant for " .. item)
+      PostChat("Disenchant for " .. item)
     else
       local bidders = {}
       for who,bid in pairs(v.bids) do
