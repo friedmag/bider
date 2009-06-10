@@ -267,6 +267,9 @@ function events:FinalizeAuctionCommand(args)
     bidwinners[item] = {}
     if next(v.bids) == nil then
       PostChat("Disenchant for " .. item)
+      if settings.enchanter ~= "" then
+        tinsert(bidwinners[item], settings.enchanter)
+      end
     else
       local bidders = {}
       for who,bid in pairs(v.bids) do
