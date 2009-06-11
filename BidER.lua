@@ -214,8 +214,8 @@ function events:InitCommand(args)
   end
   local master = args
   if args == nil or args == '' then master = UnitName("player") end
-  SetLootMethod('master', master)
   SetLootThreshold(LOOT_THRESHOLD)
+  SetLootMethod('master', master)
 end
 
 function events:EnchanterCommand(who)
