@@ -6,13 +6,12 @@
 
 -- Constants:
 local VERSION = "1.0"
-local LOOT_THRESHOLD = 3
 
 -- Data:
 local dkp
 local loots
 local frame
-local settings = {enchanter=""}
+local settings = {enchanter="", threshold=3}
 local events = {}
 local biditems = {}
 local bidwinners = {}
@@ -164,12 +163,12 @@ function events:SlashCommand(args, ...)
     PrintHelp()
   elseif cmd == "init" then
     BidER_Event("InitCommand", args)
+  elseif cmd == "set" then
+    BidER_Event("SetCommand", args)
   elseif cmd == "start" then
     BidER_Event("StartAuctionCommand", args)
   elseif cmd == "end" then
     BidER_Event("EndAuctionCommand", args)
-  elseif cmd:match('^e') then
-    BidER_Event("EnchanterCommand", args)
   elseif cmd:match('^d') then
     BidER_Event("DKPCommand", args)
   elseif cmd:match('^p') then
@@ -218,10 +217,19 @@ function events:InitCommand(args)
   SetLootMethod('master', master)
 end
 
-function events:EnchanterCommand(who)
-  if who ~= nil and who ~= "" then
-    settings.enchanter = who
-    Print("Designated Disenchanter = " .. who)
+function events:SetCommand(args)
+  local var,val = strsplit(" ", args)
+  if var == nil or var == "" then
+    for i,v in pairs(settings) do
+      Print("Setting '" .. i .. "': " .. v)
+    end
+  else
+    if settings[var] == nil then
+      Print("Setting '" .. var .. "' does not exist.")
+    else
+      settings[var] = val
+      Print("Set '" .. var .. "' to " .. val)
+    end
   end
 end
 
@@ -406,7 +414,7 @@ function events:PickCommand(args)
       Print("item picking now in progress.")
     end
     if opt1 == "loot" then
-      local threshold = LOOT_THRESHOLD
+      local threshold = settings.threshold
       if opt2 ~= nil then threshold = tonumber(opt2) end
       for i=1,GetNumLootItems() do
         local _, _, quantity, rarity, _ = GetLootSlotInfo(i)
