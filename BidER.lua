@@ -58,8 +58,11 @@ local function count_pairs(tab)
   return count
 end
 
-local function my_select(n, ...)
-  return arg[n]
+local function GetRaiderInfo(i)
+  local r = {}
+  r.name, r.rank, r.subgroup, r.level, r.class, r.fileName, 
+    r.zone, r.online, r.isDead, r.role, r.isML = GetRaidRosterInfo(i);
+  return r
 end
 
 local function BidER_SendEvent(self, event, ...)
@@ -375,9 +378,7 @@ function events:DKPCommand(args)
   elseif args:match("^[-+]?%d+$") then
     local players, value = {}, tonumber(args)
     for i=1,GetNumRaidMembers() do
-      tinsert(players, my_select(1, GetRaidRosterInfo(i)))
-    end
-    for i,name in ipairs(players) do
+      local name = GetRaiderInfo(i).name
       if dkp[name] == nil then dkp[name] = {total=value}
       else dkp[name].total = dkp[name].total + value end
     end
