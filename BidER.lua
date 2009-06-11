@@ -378,8 +378,8 @@ function events:StatusAuctionCommand(args)
     for who,bid in pairs(v.bids) do
       Print("     " .. who .. " - " .. BidText(bid))
     end
-    Print("End of bids.")
   end
+  Print("End of bids.")
 end
 
 function events:EditAuctionCommand(args)
