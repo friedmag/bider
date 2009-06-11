@@ -315,11 +315,11 @@ function events:FinalizeAuctionCommand(args)
     else
       local bidders = {}
       for who,bid in pairs(v.bids) do
-        if bid.win then tinsert(bidders, 1, {who=who, amount=true})
+        if bid.win then tinsert(bidders, 1, {who=who, win=true, amount=bid.amount})
         else
           tinsert(bidders, {who=who, amount=bid.amount})
           for i,other in ipairs(bidders) do
-            if other.amount ~= true and bid.amount > other.amount then
+            if other.win ~= true and bid.amount > other.amount then
               tinsert(bidders, i, tremove(bidders))
               break
             end
@@ -328,6 +328,10 @@ function events:FinalizeAuctionCommand(args)
       end
       for count=1,v.count do
         tinsert(bidwinners[item], bidders[count].who)
+        if bidders[count].amount > 0 then
+          dkp[bidders[count].who].total = dkp[bidders[count].who].total - bidders[count].amount
+          Print("Updated " .. bidders[count].who .. " dkp: " .. dkp[bidders[count].who].total)
+        end
         PostChat("Winner for " .. item .. " - " .. bidders[count].who)
       end
     end
@@ -387,7 +391,10 @@ function events:EditAuctionCommand(args)
         Print("Invalid bid amount '" .. amount .. "' - must be a number or 'win'")
       else
         local old_bid, new_bid, toprint = biditems[link].bids[who], {}, ""
-        if tonumber(amount) == nil then new_bid.win = true else new_bid.amount = tonumber(amount) end
+        if tonumber(amount) == nil then
+          if new_bid.win == nil then new_bid.win = true 
+          else new_bid.win = not new_bid.win end
+        else new_bid.amount = tonumber(amount) end
 
         if old_bid ~= nil then
           toprint = " (old bid: " .. BidText(old_bid) .. ")"
