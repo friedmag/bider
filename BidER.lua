@@ -529,6 +529,17 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
   elseif msg == "dkp" then
     GetDKP(from, true)
     return
+  elseif msg:match("^bids?$") then
+    local msgd = false
+    for item,v in pairs(biditems) do
+      if v.bids[from] ~= nil then
+        PostMsg("You have bid on " .. item .. ": " .. v.bids[from].amount, from)
+        msgd = true
+      end
+    end
+    if not msgd then
+      PostMsg("You have no active bids.", from)
+    end
   end
   for item, value in string.gmatch(msg, link_regex_p .. "[^|0-9A-Za-z]*([^|]*)") do
     local v = biditems[item]
