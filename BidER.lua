@@ -518,8 +518,8 @@ local function PlaceBid(who, item, bids, amount)
   else
     tosend = "Recorded bid for " .. item .. ": " .. amount
   end
-  PostMsg(tosend .. ".  You can still update your bid. To cancel, /w " ..
-    UnitName("player") .. " " .. item .. " cancel", who)
+  PostMsg(tosend .. ".  You can still update your bid.", who)
+  PostMsg("To cancel, /w " .. UnitName("player") .. " " .. item .. " cancel", who)
 end
 
 function events:CHAT_MSG_WHISPER(msg, from, ...)
