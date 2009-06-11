@@ -524,7 +524,18 @@ end
 
 function events:CHAT_MSG_WHISPER(msg, from, ...)
   if msg == "cancel" then
-    -- TODO: Cancel all bids
+    local removed = {}
+    for item,v in pairs(biditems) do
+      if v.bids[from] ~= nil then
+        v.bids[from] = nil
+        tinsert(removed, item)
+      end
+    end
+    if #removed > 0 then
+      PostMsg("Cancelled " .. #removed .. " bid(s).", from)
+    else
+      PostMsg("You have no active bids.", from)
+    end
     return
   elseif msg == "dkp" then
     GetDKP(from, true)
