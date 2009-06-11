@@ -502,12 +502,22 @@ local function CancelBid(who, item, bids)
   end
 end
 
+local function OtherBids(who, item)
+  local amount = 0
+  for oitem,v in pairs(biditems) do
+    if v.bids[who] ~= nil then
+      amount = amount + v.bids[who].amount
+    end
+  end
+  return amount
+end
+
 local function PlaceBid(who, item, bids, amount)
   local tosend, old_value
   if bids[who] ~= nil then
     old_value, bids[who] = bids[who], nil
   end
-  if GetDKP(who, false) < amount then
+  if GetDKP(who, false) < amount or GetDKP(who, false) < (amount+OtherBids(who, item)) then
     PostMsg("You do not have enough DKP for that bid.", who)
     GetDKP(who, true)
     return
