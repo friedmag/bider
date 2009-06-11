@@ -246,9 +246,9 @@ function events:InitCommand(args)
     Print("You are not the raid leader, so this probably won't work...")
   end
   local master = args
-  if args == nil or args == '' then master = UnitName("player") end
-  SetLootThreshold(LOOT_THRESHOLD)
-  SetLootMethod('master', master)
+  if args == '-' then master = UnitName("player") end
+  if master ~= nil and master ~= '' then SetLootMethod('master', master)
+  else SetLootThreshold(settings.threshold) end
 end
 
 function events:SetCommand(args)
