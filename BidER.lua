@@ -396,6 +396,7 @@ function events:EditAuctionCommand(args)
           if new_bid.win == nil then new_bid.win = true 
           else new_bid.win = not new_bid.win end
         else new_bid.amount = tonumber(amount) end
+        if new_bid.amount == nil then new_bid.amount = 0 end
 
         if old_bid ~= nil then
           toprint = " (old bid: " .. BidText(old_bid) .. ")"
