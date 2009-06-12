@@ -397,10 +397,16 @@ function events:EditAuctionCommand(args)
       else
         local old_bid, new_bid, toprint = biditems[link].bids[who], {}, ""
         if tonumber(amount) == nil then
-          if new_bid.win == nil then new_bid.win = true 
-          else new_bid.win = not new_bid.win end
+          -- Win case
+          if old_bid == nil then
+            new_bid.win = true
+            new_bid.amount = 0
+          else
+            if old_bid.win ~= true then new_bid.win = true
+            else new_bid.win = false end
+            new_bid.amount = old_bid.amount
+          end
         else new_bid.amount = tonumber(amount) end
-        if new_bid.amount == nil then new_bid.amount = 0 end
 
         if old_bid ~= nil then
           toprint = " (old bid: " .. BidText(old_bid) .. ")"
