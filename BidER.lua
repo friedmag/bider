@@ -133,6 +133,7 @@ local function PrintHelp()
   Print("     status          prints status of bids")
   Print("     edit            edits bids for the auction")
   Print("       [who] [link] [amount]")
+  Print("                     amount is a DKP value or the word 'win'")
 end
 
 local function AddLink(item_link, count)
