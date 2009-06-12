@@ -236,6 +236,7 @@ local function DumpBidInfo()
     local player = UnitName("player")
     PostChat("To bid on any item: /w " .. player .. " <link> <bid amount>")
     PostChat("To see your current DKP: /w " .. player .. " dkp")
+    PostChat("To view your current bids: /w " .. player .. " bids")
   else
     PostChat("The auction has been closed.  Results will be announced soon.")
   end
