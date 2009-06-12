@@ -374,7 +374,7 @@ function events:AssignAuctionCommand(args)
 end
 
 local function BidText(bid)
-  return (bid.win and "WIN" or bid.amount)
+  return (bid.win and (bid.amount .. "/WIN") or bid.amount)
 end
 
 function events:StatusAuctionCommand(args)
