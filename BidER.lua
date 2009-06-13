@@ -119,6 +119,7 @@ local function PrintHelp()
   Print("       [nothing]     lists all recorded DKP")
   Print("       [+/-value]    adds/removes DKP for all raid members")
   Print("       [who] [value] sets who's DKP to value")
+  Print("     loots           shows info on loots handed out (could build up a lot...)")
   Print("  AUCTION COMMANDS")
   Print("     pick            starts picking items for auction")
   Print("         [item list] adds the linked items")
@@ -194,6 +195,11 @@ local function GetDKP(who, msg)
   end
 end
 
+local function AddLoot(who, item)
+  if loots[who] == nil then loots[who] = {} end
+  tinsert(loots[who], {item=item, time=time()})
+end
+
 -----------------
 -- Hook Functions
 -----------------
@@ -203,8 +209,8 @@ function events:ADDON_LOADED(addon, ...)
     if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default'} end
     if BidER_Loots == nil then BidER_Loots = {} end
     dkp = BidER_DKP
-    loots = BidER_Loots
     settings = BidER_Settings
+    loots = BidER_Loots
     Print("Loaded " .. VERSION)
   end
 end
@@ -230,6 +236,8 @@ function events:SlashCommand(args, ...)
     BidER_Event("EndAuctionCommand", args)
   elseif cmd:match('^d') then
     BidER_Event("DKPCommand", args)
+  elseif cmd:match('^l') then
+    BidER_Event("LootsCommand", args)
   elseif cmd:match('^p') then
     BidER_Event("PickCommand", args)
   elseif cmd:match('^b') or cmd:match('^e') then
@@ -291,6 +299,16 @@ function events:SetCommand(args)
       Print("Set '" .. var .. "' to " .. val)
     end
   end
+end
+
+function events:LootsCommand(args)
+  for who,v in pairs(loots) do
+    Print("Looted by " .. who .. ":")
+    for i,w in ipairs(v) do
+      Print("   " .. date("%m/%d/%y %H:%M:%S", w.time) .. " - " .. w.item)
+    end
+  end
+  Print("End of loot listing.")
 end
 
 function events:AnnounceAuctionCommand(args)
@@ -363,6 +381,7 @@ function events:FinalizeAuctionCommand(args)
           Print("Updated " .. bidders[count].who .. " dkp: " .. GetDKP(bidders[count].who))
         end
         PostChat("Winner for " .. item .. " - " .. bidders[count].who)
+        AddLoot(bidders[count].who, item)
       end
     end
   end
@@ -448,7 +467,6 @@ function events:DKPCommand(args)
   local dkp = GetDKPSet()
 
   if args == "" then
-    Print("DKP Listing:")
     for name,v in pairs(dkp) do
       Print("DKP for " .. name .. " - " .. v.total)
     end
