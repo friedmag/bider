@@ -11,7 +11,7 @@ local VERSION = "1.0"
 local dkp
 local loots
 local frame
-local settings = {enchanter="", threshold=3}
+local settings
 local events = {}
 local biditems = {}
 local bidwinners = {}
@@ -172,15 +172,38 @@ local function EndItemPicking()
   end
 end
 
+local function GetDKPSet()
+  if dkp[settings.dkp] == nil then dkp[settings.dkp] = {} end
+  return dkp[settings.dkp]
+end
+
+local function SubtractDKP(who, amount)
+  local dkp = GetDKPSet()
+  dkp[who].total = dkp[who].total - amount
+end
+
+local function GetDKP(who, msg)
+  local dkp = GetDKPSet()
+  if dkp[who] == nil or dkp[who].total == nil or dkp[who].total == 0 then
+    if msg then PostMsg("You have no DKP.", who) end
+    return 0
+  else
+    if msg then PostMsg("You have " .. dkp[who].total .. " DKP.", who) end
+    return dkp[who].total
+  end
+end
+
 -----------------
 -- Hook Functions
 -----------------
 function events:ADDON_LOADED(addon, ...)
   if addon == "BidER" then
     if BidER_DKP == nil then BidER_DKP = {} end
+    if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default'} end
     if BidER_Loots == nil then BidER_Loots = {} end
     dkp = BidER_DKP
     loots = BidER_Loots
+    settings = BidER_Settings
     Print("Loaded " .. VERSION)
   end
 end
@@ -335,8 +358,8 @@ function events:FinalizeAuctionCommand(args)
       for count=1,v.count do
         tinsert(bidwinners[item], bidders[count].who)
         if bidders[count].amount > 0 then
-          dkp[bidders[count].who].total = dkp[bidders[count].who].total - bidders[count].amount
-          Print("Updated " .. bidders[count].who .. " dkp: " .. dkp[bidders[count].who].total)
+          SubtractDKP(bidders[count].who, bidders[count].amount)
+          Print("Updated " .. bidders[count].who .. " dkp: " .. GetDKP(bidders[count].who))
         end
         PostChat("Winner for " .. item .. " - " .. bidders[count].who)
       end
@@ -421,11 +444,14 @@ end
 
 function events:DKPCommand(args)
   local old_value
+  local dkp = GetDKPSet()
 
   if args == "" then
+    Print("DKP Listing:")
     for name,v in pairs(dkp) do
       Print("DKP for " .. name .. " - " .. v.total)
     end
+    Print("End of DKP Listing.")
   elseif args:match("^[-+]?%d+$") then
     local players, value = {}, tonumber(args)
     for i=1,GetNumRaidMembers() do
@@ -493,16 +519,6 @@ function events:HyperlinkShow(ref, link_text, item_link, button, ...)
 	end
 end
 
-local function GetDKP(who, msg)
-  if dkp[who] == nil or dkp[who].total == nil or dkp[who].total == 0 then
-    if msg then PostMsg("You have no DKP.", who) end
-    return 0
-  else
-    if msg then PostMsg("You have " .. dkp[who].total .. " DKP.", who) end
-    return dkp[who].total
-  end
-end
-
 local function CancelBid(who, item, bids)
   local old_value
   if bids[who] ~= nil then
@@ -530,7 +546,7 @@ local function PlaceBid(who, item, bids, amount)
   if bids[who] ~= nil then
     old_value, bids[who] = bids[who], nil
   end
-  if GetDKP(who, false) < amount or GetDKP(who, false) < (amount+OtherBids(who, item)) then
+  if GetDKP(who) < amount or GetDKP(who) < (amount+OtherBids(who, item)) then
     PostMsg("You do not have enough DKP for that bid.", who)
     GetDKP(who, true)
     return
