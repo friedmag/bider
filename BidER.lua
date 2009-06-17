@@ -351,30 +351,30 @@ function events:FinalizeAuctionCommand(args)
   bidwinners = {}
   for item,v in pairs(biditems) do
     bidwinners[item] = {}
-    if next(v.bids) == nil then
-      PostChat("Disenchant for " .. item)
-      if settings.enchanter ~= "" then
-        tinsert(bidwinners[item], settings.enchanter)
-      end
-    else
-      local bidders = {}
-      for who,bid in pairs(v.bids) do
-        if bid.win then tinsert(bidders, 1, {who=who, win=true, amount=bid.amount})
-        else
-          tinsert(bidders, {who=who, amount=bid.amount})
-          for i,other in ipairs(bidders) do
-            if other.win ~= true and bid.amount > other.amount then
-              tinsert(bidders, i, tremove(bidders))
-              break
-            elseif i ~= #bidders and other.win ~= true and bid.amount == other.amount then
-              Print("WARNING!  Tie for " .. item .. " between " .. who .. " and " .. other.who)
-              Print("Finalization cancelled.")
-              return
-            end
+    local bidders = {}
+    for who,bid in pairs(v.bids) do
+      if bid.win then tinsert(bidders, 1, {who=who, win=true, amount=bid.amount})
+      else
+        tinsert(bidders, {who=who, amount=bid.amount})
+        for i,other in ipairs(bidders) do
+          if other.win ~= true and bid.amount > other.amount then
+            tinsert(bidders, i, tremove(bidders))
+            break
+          elseif i ~= #bidders and other.win ~= true and bid.amount == other.amount then
+            Print("WARNING!  Tie for " .. item .. " between " .. who .. " and " .. other.who)
+            Print("Finalization cancelled.")
+            return
           end
         end
       end
-      for count=1,v.count do
+    end
+    for count=1,v.count do
+      if bidders[count] == nil then
+        PostChat("Disenchant for " .. item)
+        if settings.enchanter ~= "" then
+          tinsert(bidwinners[item], settings.enchanter)
+        end
+      else
         tinsert(bidwinners[item], bidders[count].who)
         if bidders[count].amount > 0 then
           SubtractDKP(bidders[count].who, bidders[count].amount)
