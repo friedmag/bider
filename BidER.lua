@@ -610,7 +610,7 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
       PostMsg("You have no active bids.", from)
     end
   end
-  for item, value in string.gmatch(msg, link_regex_p .. "[^|0-9A-Za-z]*([^|]*)") do
+  for item, value in string.gmatch(msg, link_regex_p .. "[^|0-9A-Za-z]*([^|.-]*)") do
     local v = biditems[item]
     if v == nil then
       PostMsg("There is no auction in progress for " .. item, from)
