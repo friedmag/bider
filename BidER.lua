@@ -10,8 +10,9 @@ local VERSION = "1.0"
 -- Data:
 local dkp
 local loots
-local frame
 local settings
+local dkpresets
+local frame
 local events = {}
 local biditems = {}
 local bidwinners = {}
@@ -56,6 +57,15 @@ local function count_pairs(tab)
   local count = 0
   for i,v in pairs(tab) do count = count + 1 end
   return count
+end
+
+local function contains(tab, what)
+  for i,v in pairs(tab) do
+    if v == what then
+      return true
+    end
+  end
+  return false
 end
 
 local function GetRaiderInfo(i)
@@ -120,6 +130,9 @@ local function PrintHelp()
   Print("       [+/-value]    adds/removes DKP for all raid members")
   Print("       [who] [value] sets who's DKP to value")
   Print("     loots           shows info on loots handed out (could build up a lot...)")
+  Print("     reset           sets DKP reset mode on/manages it (forces FULL bids for next bid per player)")
+  Print("       [nothing]     lists all people who have already been reset (if active)")
+  Print("       [on]          turns DKP reset requirement on for the current DKP set")
   Print("  AUCTION COMMANDS")
   Print("     pick            starts picking items for auction")
   Print("         [item list] adds the linked items")
@@ -179,9 +192,25 @@ local function GetDKPSet()
   return dkp[settings.dkp]
 end
 
+local function GetDKPResetsSet()
+  return dkpresets[settings.dkp]
+end
+
+local function NeedDKPReset(who)
+  local dkpresets = GetDKPResetsSet()
+  if dkpresets == nil then return false end
+  return not contains(dkpresets, who)
+end
+
 local function SubtractDKP(who, amount)
   local dkp = GetDKPSet()
-  dkp[who].total = dkp[who].total - amount
+  if NeedDKPReset(who) then
+    dkp[who].total = 0
+    tinsert(GetDKPResetsSet(), who)
+  else
+    dkp[who].total = dkp[who].total - amount
+    if dkp[who].total < 0 then dkp[who].total = 0 end
+  end
 end
 
 local function GetDKP(who, msg)
@@ -204,13 +233,15 @@ end
 -- Hook Functions
 -----------------
 function events:ADDON_LOADED(addon, ...)
-  if addon == "BidER" then
+  if addon:lower() == "bider" then
     if BidER_DKP == nil then BidER_DKP = {} end
-    if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default'} end
     if BidER_Loots == nil then BidER_Loots = {} end
+    if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default'} end
+    if BidER_DKPResets == nil then BidER_DKPResets = {} end
     dkp = BidER_DKP
-    settings = BidER_Settings
     loots = BidER_Loots
+    settings = BidER_Settings
+    dkpresets = BidER_DKPResets
     Print("Loaded " .. VERSION)
   end
 end
@@ -250,6 +281,8 @@ function events:SlashCommand(args, ...)
     BidER_Event("AssignAuctionCommand", args)
   elseif cmd:match('^f') then
     BidER_Event("FinalizeAuctionCommand", args)
+  elseif cmd == "reset" then
+    BidER_Event("ResetCommand", args)
   else
     Print("Unknown command: " .. cmd)
     PrintHelp()
@@ -272,6 +305,37 @@ local function DumpBidInfo()
     PostChat("To view your current bids: /w " .. player .. " bids")
   else
     PostChat("The auction has been closed.  Results will be announced soon.")
+  end
+end
+
+function events:ResetCommand(args)
+  if args == "on" then
+    dkpresets[settings.dkp] = {}
+    Print("Initiated DKP reset mode")
+  else
+    local dkpresets = GetDKPResetsSet()
+    if dkpresets == nil then
+      Print("DKP reset mode is not active.")
+    else
+      out = "Players reset: "
+      for i,v in ipairs(dkpresets) do
+        if i > 1 then out = out .. ", " end
+        out = out .. v
+      end
+      Print(out)
+      if GetNumRaidMembers() > 1 then
+        local count = 1
+        out = "DKP reset needed for: "
+        for i=1,GetNumRaidMembers() do
+          local name = GetRaiderInfo(i).name
+          if NeedsDKPReset(name) then
+            if count > 1 then out = out .. ", " end
+            out = out .. name
+            count = count + 1
+          end
+        end
+      end
+    end
   end
 end
 
@@ -425,7 +489,9 @@ function events:StatusAuctionCommand(args)
   for item,v in pairs(biditems) do
     Print("Bids on " .. item)
     for who,bid in pairs(v.bids) do
-      Print("     " .. who .. " - " .. BidText(bid))
+      local flag = ""
+      if NeedDKPReset(who) then flag = "*" end
+      Print("     " .. flag .. who .. " - " .. BidText(bid))
     end
   end
   Print("End of bids.")
@@ -468,7 +534,9 @@ function events:DKPCommand(args)
 
   if args == "" then
     for name,v in pairs(dkp) do
-      Print("DKP for " .. name .. " - " .. v.total)
+      local flag = ""
+      if NeedDKPReset(name) then flag = "*" end
+      Print("DKP for " .. flag .. name .. " - " .. v.total)
     end
     Print("End of DKP Listing.")
   elseif args:match("^[-+]?%d+$") then
@@ -578,6 +646,9 @@ local function PlaceBid(who, item, bids, amount)
   end
   PostMsg(tosend .. ".  You can still update your bid.", who)
   PostMsg("To cancel, /w " .. UnitName("player") .. " " .. item .. " cancel", who)
+  if NeedDKPReset(who) then
+    PostMsg("WARNING!  You are under DKP reset conditions, and as such will lose ALL points regardless of bids if you win!", who)
+  end
 end
 
 function events:CHAT_MSG_WHISPER(msg, from, ...)
