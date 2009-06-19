@@ -452,7 +452,7 @@ function events:FinalizeAuctionCommand(args)
         tinsert(bidwinners[item], bidders[count].who)
         if bidders[count].amount > 0 then
           SubtractDKP(bidders[count].who, bidders[count].amount)
-          Print("Updated " .. bidders[count].who .. " dkp: " .. GetDKP(bidders[count].who))
+          Print("Updated " .. bidders[count].who .. " dkp: " .. GetDKP(bidders[count].who), true)
         end
         PostChat("Winner for " .. item .. " - " .. bidders[count].who)
         AddLoot(bidders[count].who, item)
