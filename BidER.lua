@@ -190,7 +190,7 @@ local function EndItemPicking()
     pick_active = false
     Print("item picking completed.")
     for item_link,v in pairs(biditems) do
-      Print("Item: " .. item_link)
+      Print("Item: " .. item_link .. "x" .. v.count)
     end
   else
     Print("item picking is not in progress.")
