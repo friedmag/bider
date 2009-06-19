@@ -27,10 +27,20 @@ local sep_regex = "[-_ :;|!]"
 -------------------
 
 -- Print: helper function to send message to default chat frame. Messages will be prefixed with "BidER: "
-local function Print(text)
+local function Print(text, share)
 	if (DEFAULT_CHAT_FRAME) then
 		DEFAULT_CHAT_FRAME:AddMessage("BidER: " .. text)
 	end
+  if share then
+    if settings.channel:lower() == "officer" then
+      SendChatMessage(text, "OFFICER"); 
+    else
+      local index = GetChannelName(settings.channel)
+      if index ~= nil then 
+        SendChatMessage(text, "CHANNEL", nil, index); 
+      end
+    end
+  end
 end
 
 local function PostChat(msg)
@@ -236,7 +246,7 @@ function events:ADDON_LOADED(addon, ...)
   if addon:lower() == "bider" then
     if BidER_DKP == nil then BidER_DKP = {} end
     if BidER_Loots == nil then BidER_Loots = {} end
-    if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default'} end
+    if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default', channel='Officer'} end
     if BidER_DKPResets == nil then BidER_DKPResets = {} end
     dkp = BidER_DKP
     loots = BidER_Loots
@@ -487,14 +497,14 @@ end
 
 function events:StatusAuctionCommand(args)
   for item,v in pairs(biditems) do
-    Print("Bids on " .. item)
+    Print("Bids on " .. item, true)
     for who,bid in pairs(v.bids) do
       local flag = ""
       if NeedDKPReset(who) then flag = "*" end
-      Print("     " .. flag .. who .. " - " .. BidText(bid))
+      Print("     " .. flag .. who .. " - " .. BidText(bid), true)
     end
   end
-  Print("End of bids.")
+  Print("End of bids.", true)
 end
 
 function events:EditAuctionCommand(args)
@@ -522,7 +532,7 @@ function events:EditAuctionCommand(args)
           toprint = " (old bid: " .. BidText(old_bid) .. ")"
         end
         biditems[link].bids[who] = new_bid
-        Print("Updated bid to " .. BidText(new_bid) .. " for " .. who .. " on " .. link .. toprint)
+        Print("Updated bid to " .. BidText(new_bid) .. " for " .. who .. " on " .. link .. toprint, true)
       end
     end
   end
@@ -536,9 +546,9 @@ function events:DKPCommand(args)
     for name,v in pairs(dkp) do
       local flag = ""
       if NeedDKPReset(name) then flag = "*" end
-      Print("DKP for " .. flag .. name .. " - " .. v.total)
+      Print("DKP for " .. flag .. name .. " - " .. v.total, true)
     end
-    Print("End of DKP Listing.")
+    Print("End of DKP Listing.", true)
   elseif args:match("^[-+]?%d+$") then
     local players, value = {}, tonumber(args)
     for i=1,GetNumRaidMembers() do
@@ -546,7 +556,7 @@ function events:DKPCommand(args)
       if dkp[name] == nil then dkp[name] = {total=value}
       else dkp[name].total = dkp[name].total + value end
     end
-    Print("Added " .. value .. " DKP for all raid members")
+    Print("Added " .. value .. " DKP for all raid members", true)
   else
     for name,value in args:gmatch("(%a+)" .. sep_regex .. "(%d+)") do
       if dkp[name] == nil then dkp[name] = {} end
@@ -556,9 +566,9 @@ function events:DKPCommand(args)
       if dkp[name].total ~= old_value then
         local was_str = ""
         if old_value ~= nil then was_str = " (was: " .. old_value .. ")" end
-        Print("DKP value for " .. name .. " updated: " .. dkp[name].total .. was_str)
+        Print("DKP value for " .. name .. " updated: " .. dkp[name].total .. was_str, true)
       else
-        Print("DKP value for " .. name .. " unchanged (" .. old_value .. ")")
+        Print("DKP value for " .. name .. " unchanged (" .. old_value .. ")", true)
       end
     end
   end
