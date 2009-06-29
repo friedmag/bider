@@ -31,8 +31,8 @@ local function Print(text, share)
 	if (DEFAULT_CHAT_FRAME) then
 		DEFAULT_CHAT_FRAME:AddMessage("BidER: " .. text)
 	end
-  if share then
-    if settings.channel:lower() == "officer" then
+  if share == true then
+    if settings.channel:lower():match("officers?") then
       SendChatMessage(text, "OFFICER"); 
     else
       local index = GetChannelName(settings.channel)
