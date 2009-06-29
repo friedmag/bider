@@ -434,7 +434,7 @@ function events:FinalizeAuctionCommand(args)
           if other.win ~= true and bid.amount > other.amount then
             tinsert(bidders, i, tremove(bidders))
             break
-          elseif i ~= #bidders and other.win ~= true and bid.amount == other.amount then
+          elseif i == 1 and i ~= #bidders and other.win ~= true and bid.amount == other.amount then
             Print("WARNING!  Tie for " .. item .. " between " .. who .. " and " .. other.who)
             Print("Finalization cancelled.")
             return
