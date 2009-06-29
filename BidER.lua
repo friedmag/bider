@@ -699,10 +699,13 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
     end
     if value:match('cancel') then
       CancelBid(from, item, v.bids)
-    elseif tonumber(value) ~= nil then
-      PlaceBid(from, item, v.bids, tonumber(value))
     else
-      PostMsg("Couldn't determine bid for " .. item .. ": '" .. value .. "'", from)
+      num = tonumber(value:match("%d+"))
+      if num ~= nil then
+        PlaceBid(from, item, v.bids, num)
+      else
+        PostMsg("Couldn't determine bid for " .. item .. ": '" .. value .. "'", from)
+      end
     end
   end
 end
