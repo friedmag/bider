@@ -585,19 +585,32 @@ function events:EditAuctionCommand(args)
   end
 end
 
+local function PrintDKP(name)
+  local dkp = GetDKPSet()
+  if dkp[name] == nil then dkp[name] = {total=0} end
+  local flag = ""
+  if NeedDKPReset(name) then flag = "*" end
+  Print("DKP for " .. flag .. name .. " - " .. dkp[name].total, true)
+end
+
 function events:DKPCommand(args)
   local old_value
   local dkp = GetDKPSet()
 
   if args == "" then
-    for name,v in pairs(dkp) do
-      local flag = ""
-      if NeedDKPReset(name) then flag = "*" end
-      Print("DKP for " .. flag .. name .. " - " .. v.total, true)
+    if GetNumRaidMembers() > 0 then
+      for i=1,GetNumRaidMembers() do
+        local name = GetRaiderInfo(i).name
+        PrintDKP(name)
+      end
+    else
+      for name,v in pairs(dkp) do
+        PrintDKP(name)
+      end
     end
     Print("End of DKP Listing.", true)
   elseif args:match("^[-+]?%d+$") then
-    local players, value = {}, tonumber(args)
+    local value = tonumber(args)
     for i=1,GetNumRaidMembers() do
       local name = GetRaiderInfo(i).name
       if dkp[name] == nil then dkp[name] = {total=value}
