@@ -85,7 +85,19 @@ local function GetRaiderInfo(i)
   return r
 end
 
-local function BidER_SendEvent(self, event, ...)
+local function ImportDKP(set, str)
+  if dkp[set] == nil then dkp[set] = {} end
+  local dkp = dkp[set]
+  for i,v in pairs(dkp) do dkp[i] = nil end -- erase existing DKP
+  local count = 0
+  for who,points,looted in str:gmatch("(%a+): (%d+) %((%d+)%)") do
+    dkp[who] = {total = points}
+    count = count + 1
+  end
+  Print("Imported DKP '" .. set .. "': " .. count .. " players", true)
+end
+
+function BidER_SendEvent(self, event, ...)
   if events[event] == nil then
     error("Invalid BidER event: " .. event)
   end
@@ -248,10 +260,25 @@ function events:ADDON_LOADED(addon, ...)
     if BidER_Loots == nil then BidER_Loots = {} end
     if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default', channel='Officer'} end
     if BidER_DKPResets == nil then BidER_DKPResets = {} end
+    if BidER_Imports == nil then BidER_DKPResets = {} end
     dkp = BidER_DKP
     loots = BidER_Loots
     settings = BidER_Settings
     dkpresets = BidER_DKPResets
+
+    if BidER_Imports ~= nil then
+      Print("Handling data imports...")
+      for i,v in pairs(BidER_Imports) do
+        if i == 'dkp' then
+          Print("Loading DKP...")
+          for j,w in pairs(v) do
+            ImportDKP(j, w)
+          end
+        end
+      end
+      BidER_Imports = nil
+    end
+
     Print("Loaded " .. VERSION)
   end
 end
