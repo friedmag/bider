@@ -395,6 +395,18 @@ function events:SetCommand(args)
   else
     if settings[var] == nil then
       Print("Setting '" .. var .. "' does not exist.")
+    elseif val == nil then
+      Print("Setting '" .. var .. "' currently: " .. settings[var])
+      opts = ''
+      if var == 'dkp' then
+        for i,v in pairs(dkp) do
+          if opts == '' then opts = i
+          else opts = opts .. ", " .. i end
+        end
+      end
+      if opts ~= '' then
+        Print("Current options: " .. opts)
+      end
     else
       settings[var] = val
       Print("Set '" .. var .. "' to " .. val)
