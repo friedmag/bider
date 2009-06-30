@@ -454,7 +454,7 @@ function events:EndAuctionCommand(args)
   auction_active = false
   frame:UnregisterEvent("CHAT_MSG_WHISPER")
   PostChat("Bidding is now closed!")
-  events:StatusAuctionCommand("")
+  events:StatusAuctionCommand("-")
 end
 
 function events:FinalizeAuctionCommand(args)
@@ -473,13 +473,19 @@ function events:FinalizeAuctionCommand(args)
           if other.win ~= true and bid.amount > other.amount then
             tinsert(bidders, i, tremove(bidders))
             break
-          elseif i == 1 and i ~= #bidders and other.win ~= true and bid.amount == other.amount then
-            Print("WARNING!  Tie for " .. item .. " between " .. who .. " and " .. other.who)
-            Print("Finalization cancelled.")
-            return
           end
         end
       end
+    end
+    local prev = nil
+    for i,other in ipairs(bidders) do
+      if i > 2 then break end
+      if prev ~= nil and prev.win ~= true and prev.amount == other.amount then
+        Print("WARNING!  Tie for " .. item .. " between " .. prev.who .. " and " .. other.who, true)
+        Print("Finalization cancelled.", true)
+        return
+      end
+      prev = other
     end
     for count=1,v.count do
       if bidders[count] == nil then
@@ -535,15 +541,17 @@ local function BidText(bid)
 end
 
 function events:StatusAuctionCommand(args)
+  local share = nil
+  if args == "-" then share = true end
   for item,v in pairs(biditems) do
-    Print("Bids on " .. item, true)
+    Print("Bids on " .. item, share)
     for who,bid in pairs(v.bids) do
       local flag = ""
       if NeedDKPReset(who) then flag = "*" end
-      Print("     " .. flag .. who .. " - " .. BidText(bid), true)
+      Print("     " .. flag .. who .. " - " .. BidText(bid), share)
     end
   end
-  Print("End of bids.", true)
+  Print("End of bids.", share)
 end
 
 function events:EditAuctionCommand(args)
