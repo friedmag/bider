@@ -365,7 +365,7 @@ function events:ResetCommand(args)
         out = "DKP reset needed for: "
         for i=1,GetNumRaidMembers() do
           local name = GetRaiderInfo(i).name
-          if NeedsDKPReset(name) then
+          if NeedDKPReset(name) then
             if count > 1 then out = out .. ", " end
             out = out .. name
             count = count + 1
@@ -408,6 +408,9 @@ function events:SetCommand(args)
         Print("Current options: " .. opts)
       end
     else
+      if val:match("%d+") then
+        val = tonumber(val)
+      end
       settings[var] = val
       Print("Set '" .. var .. "' to " .. val)
     end
@@ -514,20 +517,24 @@ function events:AssignAuctionCommand(args)
   end
   for item,v in pairs(bidwinners) do
     local found_item = false
-    for i=1, GetNumLootItems() do
-      if LootSlotIsItem(i) and GetLootSlotLink(i) == item then
+    for i=GetNumLootItems(), 1, -1 do
+      if GetLootSlotLink(i) == item then
         for _,who in ipairs(v) do
           local found_who = false
           for j=1, 40 do
             if GetMasterLootCandidate(j) == who then
               GiveMasterLoot(i, j)
               Print("Gave " .. item .. " to " .. who)
+              found_who = true
+              break
             end
           end
           if not found_who then
             Print("Could not find " .. who .. " to give " .. item)
           end
         end
+        found_item = true
+        break
       end
     end
     if not found_item then
