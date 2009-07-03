@@ -260,7 +260,7 @@ function events:ADDON_LOADED(addon, ...)
     if BidER_Loots == nil then BidER_Loots = {} end
     if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default', channel='Officer'} end
     if BidER_DKPResets == nil then BidER_DKPResets = {} end
-    if BidER_Imports == nil then BidER_DKPResets = {} end
+    if BidER_Imports == nil then BidER_Imports = {} end
     dkp = BidER_DKP
     loots = BidER_Loots
     settings = BidER_Settings
