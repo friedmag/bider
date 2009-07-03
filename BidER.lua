@@ -91,7 +91,7 @@ local function ImportDKP(set, str)
   for i,v in pairs(dkp) do dkp[i] = nil end -- erase existing DKP
   local count = 0
   for who,points,looted in str:gmatch("(%a+): (%d+) %((%d+)%)") do
-    dkp[who] = {total = points}
+    dkp[who] = {total = tonumber(points)}
     count = count + 1
   end
   Print("Imported DKP '" .. set .. "': " .. count .. " players", true)
