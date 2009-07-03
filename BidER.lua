@@ -9,9 +9,10 @@ local VERSION = "1.0"
 
 -- Data:
 local dkp
+local dkpresets
 local loots
 local settings
-local dkpresets
+local aliases
 local frame
 local events = {}
 local biditems = {}
@@ -155,6 +156,8 @@ local function PrintHelp()
   Print("     reset           sets DKP reset mode on/manages it (forces FULL bids for next bid per player)")
   Print("       [nothing]     lists all people who have already been reset (if active)")
   Print("       [on]          turns DKP reset requirement on for the current DKP set")
+  Print("     alias           adds an alias for 'main' as 'alt'")
+  Print("       [alt] [main]")
   Print("  AUCTION COMMANDS")
   Print("     pick            starts picking items for auction")
   Print("         [item list] adds the linked items")
@@ -257,14 +260,25 @@ end
 function events:ADDON_LOADED(addon, ...)
   if addon:lower() == "bider" then
     if BidER_DKP == nil then BidER_DKP = {} end
+    if BidER_DKPResets == nil then BidER_DKPResets = {} end
     if BidER_Loots == nil then BidER_Loots = {} end
     if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default', channel='Officer'} end
-    if BidER_DKPResets == nil then BidER_DKPResets = {} end
+    if BidER_Aliases == nil then BidER_Aliases = {} end
     if BidER_Imports == nil then BidER_Imports = {} end
     dkp = BidER_DKP
+    dkpresets = BidER_DKPResets
     loots = BidER_Loots
     settings = BidER_Settings
-    dkpresets = BidER_DKPResets
+    aliases = BidER_Aliases
+
+    -- Handle character aliases - this is a simple map of names to other names.  Just 
+    -- maps one to the other, primarily in the form of BidER_Aliases[alt_name] = main_name
+    for alt,main in pairs(aliases) do
+      for j,w in pairs(dkp) do
+        if w[main] == nil then w[main] = {total=0} end
+        w[alt] = w[main]
+      end
+    end
 
     if BidER_Imports ~= nil then
       Print("Handling data imports...")
@@ -302,6 +316,10 @@ function events:SlashCommand(args, ...)
     BidER_Event("StartAuctionCommand", args)
   elseif cmd == "end" then
     BidER_Event("EndAuctionCommand", args)
+  elseif cmd == "reset" then
+    BidER_Event("ResetCommand", args)
+  elseif cmd == "alias" then
+    BidER_Event("AliasCommand", args)
   elseif cmd:match('^d') then
     BidER_Event("DKPCommand", args)
   elseif cmd:match('^l') then
@@ -318,8 +336,6 @@ function events:SlashCommand(args, ...)
     BidER_Event("AssignAuctionCommand", args)
   elseif cmd:match('^f') then
     BidER_Event("FinalizeAuctionCommand", args)
-  elseif cmd == "reset" then
-    BidER_Event("ResetCommand", args)
   else
     Print("Unknown command: " .. cmd)
     PrintHelp()
@@ -373,6 +389,30 @@ function events:ResetCommand(args)
         end
       end
     end
+  end
+end
+
+function events:AliasCommand(args)
+  local alt, main = strsplit(" ", args)
+  if alt:match("^-") then
+    alt = alt:strsub(2)
+    if aliases[alt] == nil then
+      Print("There is no alias for " .. alt)
+    else
+      main = aliases[alt]
+      aliases[alt] = nil
+      for j,w in pairs(dkp) do
+        if w[alt] ~= nil then w[alt] = {total=w[alt].total} end
+      end
+      Print("Removed alias " .. alt .. " for " .. main)
+    end
+  else
+    aliases[alt] = main
+    for j,w in pairs(dkp) do
+      if w[main] == nil then w[main] = {total=0} end
+      w[alt] = w[main]
+    end
+    Print("Created alias " .. alt .. " for " .. main)
   end
 end
 
