@@ -98,6 +98,10 @@ local function ImportDKP(set, str)
   Print("Imported DKP '" .. set .. "': " .. count .. " players", true)
 end
 
+local function FixName(name)
+  return (name:sub(1,1):upper() .. name:sub(2):lower())
+end
+
 function BidER_SendEvent(self, event, ...)
   if events[event] == nil then
     error("Invalid BidER event: " .. event)
@@ -395,7 +399,7 @@ end
 function events:AliasCommand(args)
   local alt, main = strsplit(" ", args)
   if alt:match("^-") then
-    alt = alt:strsub(2)
+    alt = FixName(alt:sub(2))
     if aliases[alt] == nil then
       Print("There is no alias for " .. alt)
     else
@@ -407,6 +411,7 @@ function events:AliasCommand(args)
       Print("Removed alias " .. alt .. " for " .. main)
     end
   else
+    alt, main = FixName(alt), FixName(main)
     aliases[alt] = main
     for j,w in pairs(dkp) do
       if w[main] == nil then w[main] = {total=0} end
@@ -603,6 +608,7 @@ end
 
 function events:EditAuctionCommand(args)
   for who,link,amount in args:gmatch("(%a+)" .. sep_regex .. "*" .. link_regex_p .. sep_regex .. "*(%w+)") do
+    who = FixName(who)
     if biditems[link] == nil then
       Print("Not taking bids on " .. link)
     else
