@@ -6,6 +6,7 @@
 
 -- Constants:
 local VERSION = "1.0"
+local FRAME = "BidERFrame"
 
 -- Data:
 local dkp
@@ -62,6 +63,10 @@ local function PostMsg(msg, target)
   else
     SendChatMessage("BidER: " .. msg, "WHISPER", nil, target)
   end
+end
+
+local function GetWidget(name)
+  return _G[FRAME .. name]
 end
 
 local function count_pairs(tab)
@@ -128,9 +133,7 @@ end
 -- Initialization
 -----------------
 function events:OnLoad()
-  frame = CreateFrame("FRAME", nil, UIParent)
-  frame:SetScript("OnEvent", BidER_SendEvent)
-  frame:RegisterEvent("ADDON_LOADED")
+  frame = GetWidget("")
   hooksecurefunc("ChatFrame_OnHyperlinkShow", function(...) BidER_Event("HyperlinkShow", ...) end)
 end
 
@@ -365,6 +368,11 @@ local function DumpBidInfo()
   end
 end
 
+function events:UICommand(args)
+  BidERItemText:SetText("[" .. settings.dkp .. "]")
+  frame:Show()
+end
+
 function events:ResetCommand(args)
   if args == "on" then
     dkpresets[settings.dkp] = {}
@@ -489,7 +497,6 @@ function events:StartAuctionCommand(args)
     return
   end
   auction_active = true
-  frame:RegisterEvent("CHAT_MSG_WHISPER")
   PostChat("Auction is now in progress")
   DumpBidInfo()
 end
@@ -500,7 +507,6 @@ function events:EndAuctionCommand(args)
     return
   end
   auction_active = false
-  frame:UnregisterEvent("CHAT_MSG_WHISPER")
   PostChat("Bidding is now closed!")
   events:StatusAuctionCommand("-")
 end
@@ -779,49 +785,51 @@ local function PlaceBid(who, item, bids, amount)
 end
 
 function events:CHAT_MSG_WHISPER(msg, from, ...)
-  if msg == "cancel" then
-    local removed = {}
-    for item,v in pairs(biditems) do
-      if v.bids[from] ~= nil then
-        v.bids[from] = nil
-        tinsert(removed, item)
-      end
-    end
-    if #removed > 0 then
-      PostMsg("Cancelled " .. #removed .. " bid(s).", from)
-    else
-      PostMsg("You have no active bids.", from)
-    end
-    return
-  elseif msg == "dkp" then
+  if msg == "dkp" then
     GetDKP(from, true)
     return
-  elseif msg:match("^bids?$") then
-    local msgd = false
-    for item,v in pairs(biditems) do
-      if v.bids[from] ~= nil then
-        PostMsg("You have bid on " .. item .. ": " .. v.bids[from].amount, from)
-        msgd = true
+  elseif auction_active then
+    if msg == "cancel" then
+      local removed = {}
+      for item,v in pairs(biditems) do
+        if v.bids[from] ~= nil then
+          v.bids[from] = nil
+          tinsert(removed, item)
+        end
+      end
+      if #removed > 0 then
+        PostMsg("Cancelled " .. #removed .. " bid(s).", from)
+      else
+        PostMsg("You have no active bids.", from)
+      end
+      return
+    elseif msg:match("^bids?$") then
+      local msgd = false
+      for item,v in pairs(biditems) do
+        if v.bids[from] ~= nil then
+          PostMsg("You have bid on " .. item .. ": " .. v.bids[from].amount, from)
+          msgd = true
+        end
+      end
+      if not msgd then
+        PostMsg("You have no active bids.", from)
       end
     end
-    if not msgd then
-      PostMsg("You have no active bids.", from)
-    end
-  end
-  for item, value in string.gmatch(msg, link_regex_p .. "[^|0-9A-Za-z]*([^|.-]*)") do
-    local v = biditems[item]
-    if v == nil then
-      PostMsg("There is no auction in progress for " .. item, from)
-      return
-    end
-    if value:match('cancel') then
-      CancelBid(from, item, v.bids)
-    else
-      num = tonumber(value:match("%d+"))
-      if num ~= nil then
-        PlaceBid(from, item, v.bids, num)
+    for item, value in string.gmatch(msg, link_regex_p .. "[^|0-9A-Za-z]*([^|.-]*)") do
+      local v = biditems[item]
+      if v == nil then
+        PostMsg("There is no auction in progress for " .. item, from)
+        return
+      end
+      if value:match('cancel') then
+        CancelBid(from, item, v.bids)
       else
-        PostMsg("Couldn't determine bid for " .. item .. ": '" .. value .. "'", from)
+        num = tonumber(value:match("%d+"))
+        if num ~= nil then
+          PlaceBid(from, item, v.bids, num)
+        else
+          PostMsg("Couldn't determine bid for " .. item .. ": '" .. value .. "'", from)
+        end
       end
     end
   end
@@ -830,6 +838,10 @@ end
 ----------------------
 -- Button/UI Functions
 ----------------------
+function events:CloseWindow()
+  frame:Hide()
+end
 
--- Start 'er up
-events:OnLoad()
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
