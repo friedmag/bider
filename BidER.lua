@@ -177,7 +177,7 @@ local function PrintHelp()
   Print("     status          prints status of bids")
   Print("     edit            edits bids for the auction")
   Print("       [who] [link] [amount]")
-  Print("                     amount is a DKP value or the word 'win'")
+  Print("                     amount is a DKP value or the word 'win' or 'cancel'")
 end
 
 local function AddLink(item_link, count)
@@ -589,7 +589,7 @@ function events:AssignAuctionCommand(args)
 end
 
 local function BidText(bid)
-  return (bid.win and (bid.amount .. "/WIN") or bid.amount)
+  return ((bid and (bid.win and (bid.amount .. "/WIN") or bid.amount)) or "CANCELLED")
 end
 
 function events:StatusAuctionCommand(args)
@@ -618,13 +618,17 @@ function events:EditAuctionCommand(args)
         local old_bid, new_bid, toprint = biditems[link].bids[who], {}, ""
         if tonumber(amount) == nil then
           -- Win case
-          if old_bid == nil then
-            new_bid.win = true
-            new_bid.amount = 0
-          else
-            if old_bid.win ~= true then new_bid.win = true
-            else new_bid.win = false end
-            new_bid.amount = old_bid.amount
+          if amount:lower() == "win" then
+            if old_bid == nil then
+              new_bid.win = true
+              new_bid.amount = 0
+            else
+              if old_bid.win ~= true then new_bid.win = true
+              else new_bid.win = false end
+              new_bid.amount = old_bid.amount
+            end
+          elseif amount:lower() == "cancel" then
+            new_bid = nil
           end
         else new_bid.amount = tonumber(amount) end
 
