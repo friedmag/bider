@@ -11,18 +11,22 @@ local FRAME = "BidERFrame"
 -- Data:
 local dkp
 local dkpresets
-local loots
+local raids
 local settings
 local aliases
 local frame
 local events = {}
 local biditems = {}
 local bidwinners = {}
-local pick_active = false
-local auction_active = false
 local link_regex = "|c%x+|H[^|]+|h%[[^|]+%]|h|r"
 local link_regex_p = "(" .. link_regex .. ")"
 local sep_regex = "[-_ :;|!]"
+
+local debug = false
+local pick_active = false
+local auction_active = false
+local active_raid = ''
+local last_kill = ''
 
 -------------------
 -- Helper Functions
@@ -264,24 +268,75 @@ local function GetDKP(who, msg)
 end
 
 local function AddLoot(who, item)
-  if loots[who] == nil then loots[who] = {} end
-  tinsert(loots[who], {item=item, time=time()})
+  local event = raids[active_raid].events[last_kill]
+  if event ~= nil then
+    local loot = {who=who, item=item}
+    tinsert(event.loots, loot)
+  end
+end
+
+local function GrantDKP(who, amount)
+  local dkp = GetDKPSet()
+  if who == nil then
+    for i=1,GetNumRaidMembers() do
+      local name = GetRaiderInfo(i).name
+      if dkp[name] == nil then dkp[name] = {total=amount}
+      else dkp[name].total = dkp[name].total + amount end
+    end
+    Print("Added " .. amount .. " DKP for all raid members", true)
+  end
 end
 
 -----------------
 -- Hook Functions
 -----------------
+local function HandleBossEvent(boss, killed)
+  if active_raid ~= '' then
+    if killed then
+      GrantDKP(nil, 1)
+      last_kill = boss
+    end
+
+    local raiders = {}
+    for i=1,GetNumRaidMembers() do
+      tinsert(raiders, GetRaiderInfo(i).name)
+    end
+
+    local event = raids[active_raid].events[last_kill]
+    if event == nil then
+      event = {
+        attempts = {},
+        attendance = raiders,
+        loots = {},
+      }
+    end
+    event.killed = killed
+    tinsert(event.attempts, time())
+    raids[active_raid].events[boss] = event
+  end
+end
+
+function events:DBM_Kill(mod)
+  Print("Received KILL callback: " .. mod.combatInfo.name)
+  HandleBossEvent(mod.combatInfo.name, true)
+end
+
+function events:DBM_Wipe(mod)
+  Print("Received WIPE callback: " .. mod.combatInfo.name)
+  HandleBossEvent(mod.combatInfo.name, false)
+end
+
 function events:ADDON_LOADED(addon, ...)
   if addon:lower() == "bider" then
     if BidER_DKP == nil then BidER_DKP = {} end
     if BidER_DKPResets == nil then BidER_DKPResets = {} end
-    if BidER_Loots == nil then BidER_Loots = {} end
+    if BidER_Raids == nil then BidER_Raids = {} end
     if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default', channel='Officer'} end
     if BidER_Aliases == nil then BidER_Aliases = {} end
     if BidER_Imports == nil then BidER_Imports = {} end
     dkp = BidER_DKP
     dkpresets = BidER_DKPResets
-    loots = BidER_Loots
+    raids = BidER_Raids
     settings = BidER_Settings
     aliases = BidER_Aliases
 
@@ -308,6 +363,10 @@ function events:ADDON_LOADED(addon, ...)
     end
 
     Print("Loaded " .. VERSION)
+  elseif addon:lower() == "dbm-core" then
+    DBM:RegisterCallback('kill', function(...) events:DBM_Kill(...) end)
+    DBM:RegisterCallback('wipe', function(...) events:DBM_Wipe(...) end)
+    Print("Registered callbacks with DBM.")
   end
 end
 
@@ -324,12 +383,16 @@ function events:SlashCommand(args, ...)
     PrintHelp()
   elseif cmd == "init" then
     BidER_Event("InitCommand", args)
+  elseif cmd == "raid" then
+    BidER_Event("RaidCommand", args)
   elseif cmd == "set" then
     BidER_Event("SetCommand", args)
   elseif cmd == "start" then
     BidER_Event("StartAuctionCommand", args)
   elseif cmd == "end" then
     BidER_Event("EndAuctionCommand", args)
+  elseif cmd == "debug" then
+    BidER_Event("DebugCommand", args)
   elseif cmd == "reset" then
     BidER_Event("ResetCommand", args)
   elseif cmd == "alias" then
@@ -378,6 +441,14 @@ end
 function events:UICommand(args)
   BidERItemText:SetText("[" .. settings.dkp .. "]")
   frame:Show()
+end
+
+function events:DebugCommand(args)
+  if args:match(".+") then
+    Print(args:gsub("|", "!"))
+  else
+    debug = not debug
+  end
 end
 
 function events:ResetCommand(args)
@@ -445,6 +516,24 @@ function events:InitCommand(args)
   if args == '-' then master = UnitName("player") end
   if master ~= nil and master ~= '' then SetLootMethod('master', master)
   else SetLootThreshold(settings.threshold) end
+end
+
+function events:RaidCommand(args)
+  cmd, arg = strsplit(" ", args)
+  if cmd == "start" then
+    active_raid = arg
+    local new_raid = {
+      start_time = time(),
+      events = {},
+    }
+    raids[active_raid] = new_raid
+    Print("Started raid: " .. active_raid)
+  elseif cmd == "end" then
+    raids[active_raid].end_time = time()
+    Print("Ended raid: " .. active_raid .. " (" ..
+      (raids[active_raid].end_time - raids[active_raid].start_time) .. ")")
+    active_raid = ''
+  end
 end
 
 function events:SetCommand(args)
@@ -679,13 +768,7 @@ function events:DKPCommand(args)
     end
     Print("End of DKP Listing.", true)
   elseif args:match("^[-+]?%d+$") then
-    local value = tonumber(args)
-    for i=1,GetNumRaidMembers() do
-      local name = GetRaiderInfo(i).name
-      if dkp[name] == nil then dkp[name] = {total=value}
-      else dkp[name].total = dkp[name].total + value end
-    end
-    Print("Added " .. value .. " DKP for all raid members", true)
+    GrantDKP(nil, tonumber(args))
   else
     for name,value in args:gmatch("(%a+)" .. sep_regex .. "(%d+)") do
       if dkp[name] == nil then dkp[name] = {} end
@@ -706,6 +789,9 @@ end
 function events:PickCommand(args)
   if auction_active then
     Print("An auction is already active!")
+    return
+  elseif not active_raid then
+    Print("There is no active raid! Please /ber init")
     return
   end
   local opt1,opt2 = strsplit(" ", args)
