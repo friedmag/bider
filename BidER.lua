@@ -231,14 +231,21 @@ end
 local function NeedDKPReset(who)
   local dkpresets = GetDKPResetsSet()
   if dkpresets == nil then return false end
+  if aliases[who] ~= nil then who = aliases[who] end
   return not contains(dkpresets, who)
+end
+
+local function AddDKPReset(who)
+  local dkpresets = GetDKPResetsSet()
+  if aliases[who] ~= nil then who = aliases[who] end
+  tinsert(dkpresets, who)
 end
 
 local function SubtractDKP(who, amount)
   local dkp = GetDKPSet()
   if NeedDKPReset(who) then
     dkp[who].total = 0
-    tinsert(GetDKPResetsSet(), who)
+    AddDKPReset(who)
   else
     dkp[who].total = dkp[who].total - amount
     if dkp[who].total < 0 then dkp[who].total = 0 end
