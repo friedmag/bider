@@ -400,6 +400,7 @@ function events:ResetCommand(args)
           end
         end
       end
+      Print(out)
     end
   end
 end
