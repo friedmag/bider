@@ -14,6 +14,7 @@ local dkpresets
 local raids
 local settings
 local aliases
+local minbids
 local frame
 local events = {}
 local biditems = {}
@@ -92,6 +93,13 @@ local function GetRaiderInfo(i)
   local r = {}
   r.name, r.rank, r.subgroup, r.level, r.class, r.fileName, 
     r.zone, r.online, r.isDead, r.role, r.isML = GetRaidRosterInfo(i);
+  return r
+end
+
+local function GetItemInfo(item)
+  local r = {}
+  r.itemName, r.itemLink, r.itemRarity, r.itemLevel, r.itemMinLevel, r.itemType, r.itemSubType, r.itemStackCount,
+    r.itemEquipLoc, r.itemTexture = _G.GetItemInfo(item) 
   return r
 end
 
@@ -195,7 +203,7 @@ local function AddLink(item_link, count)
       Print("Updated item: " .. item_link .. "x" .. v.count)
       return
     end
-    biditems[item_link] = {bids={}, count=count}
+    biditems[item_link] = {bids={}, count=count, lvl=GetItemInfo(item_link).itemLevel}
     Print("Adding item: " .. item_link .. "x" .. count)
   end
 end
@@ -245,12 +253,19 @@ local function AddDKPReset(who)
   tinsert(dkpresets, who)
 end
 
-local function SubtractDKP(who, amount)
+local function SubtractDKP(who, amount, item)
   local dkp = GetDKPSet()
   if NeedDKPReset(who) then
     dkp[who].total = 0
     AddDKPReset(who)
   else
+    if item ~= nil then
+      -- Check that the minimum bid has been met...
+      -- the logic here is basically that you want the bid amount or the minimum,
+      -- whichever is MORE, then whichever is less between that and the player's total
+      -- DKP (as they cannot go negative)
+      amount = min(max(MinimumBid(item), amount), dkp[who].total)
+    end
     dkp[who].total = dkp[who].total - amount
     if dkp[who].total < 0 then dkp[who].total = 0 end
   end
@@ -334,11 +349,13 @@ function events:ADDON_LOADED(addon, ...)
     if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default', channel='Officer'} end
     if BidER_Aliases == nil then BidER_Aliases = {} end
     if BidER_Imports == nil then BidER_Imports = {} end
+    if BidER_MinimumBids == nil then BidER_MinimumBids = {[219]=5, [226]=10, [232]=15, [239]=20} end
     dkp = BidER_DKP
     dkpresets = BidER_DKPResets
     raids = BidER_Raids
     settings = BidER_Settings
     aliases = BidER_Aliases
+    minbids = BidER_MinimumBids
 
     -- Handle character aliases - this is a simple map of names to other names.  Just 
     -- maps one to the other, primarily in the form of BidER_Aliases[alt_name] = main_name
@@ -646,7 +663,7 @@ function events:FinalizeAuctionCommand(args)
         end
       else
         tinsert(bidwinners[item], bidders[count].who)
-        SubtractDKP(bidders[count].who, bidders[count].amount)
+        SubtractDKP(bidders[count].who, bidders[count].amount, item)
         Print("Updated " .. bidders[count].who .. " dkp: " .. GetDKP(bidders[count].who), true)
         PostChat("Winner for " .. item .. " - " .. bidders[count].who)
         AddLoot(bidders[count].who, item)
@@ -853,12 +870,17 @@ local function OtherBids(who, item)
   return amount
 end
 
+local function MinimumBid(item)
+  return minbids[biditems[item].lvl] or 0
+end
+
 local function PlaceBid(who, item, bids, amount)
   local tosend, old_value
   if bids[who] ~= nil then
     old_value, bids[who] = bids[who], nil
   end
-  if GetDKP(who) < amount or GetDKP(who) < (amount+OtherBids(who, item)) then
+  local dkp = GetDKP(who)
+  if dkp < amount or dkp < (amount+OtherBids(who, item)) then
     PostMsg("You do not have enough DKP for that bid.", who)
     GetDKP(who, true)
     return
@@ -873,6 +895,12 @@ local function PlaceBid(who, item, bids, amount)
   PostMsg("To cancel, /w " .. UnitName("player") .. " " .. item .. " cancel", who)
   if NeedDKPReset(who) then
     PostMsg("WARNING!  You are under DKP reset conditions, and as such will lose ALL points regardless of bids if you win!", who)
+  elseif amount < dkp then
+    -- Check minimum bid, if amount is less than total DKP [if it's total, that's fine]
+    local minbid = MinimumBid(item)
+    if amount < minbid then
+      PostMsg("WARNING!  " .. item .. " has a minimum bid of " .. minbid .. " but you have only bid " .. amount .. ".  If you win the item, it will cost the minimum amount or your total DKP (" .. dkp .. "), whichever is less.", who)
+    end
   end
 end
 
