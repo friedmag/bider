@@ -701,7 +701,7 @@ function events:StatusAuctionCommand(args)
     for who,bid in pairs(v.bids) do
       local flag = ""
       if NeedDKPReset(who) then flag = "*" end
-      Print("     " .. flag .. who .. " - " .. BidText(bid), share)
+      Print("     " .. flag .. who .. " - " .. BidText(bid) .. " / " .. GetDKP(who), share)
     end
   end
   Print("End of bids.", share)
