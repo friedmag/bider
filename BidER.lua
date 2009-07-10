@@ -791,7 +791,7 @@ function events:PickCommand(args)
     Print("An auction is already active!")
     return
   elseif not active_raid then
-    Print("There is no active raid! Please /ber init")
+    Print("There is no active raid! Please /ber raid start [name]")
     return
   end
   local opt1,opt2 = strsplit(" ", args)
@@ -877,11 +877,11 @@ local function PlaceBid(who, item, bids, amount)
 end
 
 function events:CHAT_MSG_WHISPER(msg, from, ...)
-  if msg == "dkp" then
+  if msg:lower():match("^ *dkp *$") then
     GetDKP(from, true)
     return
   elseif auction_active then
-    if msg == "cancel" then
+    if msg:lower():match("^ *cancel *$") then
       local removed = {}
       for item,v in pairs(biditems) do
         if v.bids[from] ~= nil then
@@ -895,7 +895,7 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
         PostMsg("You have no active bids.", from)
       end
       return
-    elseif msg:match("^bids?$") then
+    elseif msg:lower():match("^ *bids? *$") then
       local msgd = false
       for item,v in pairs(biditems) do
         if v.bids[from] ~= nil then
@@ -906,6 +906,7 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
       if not msgd then
         PostMsg("You have no active bids.", from)
       end
+      return
     end
     for item, value in string.gmatch(msg, link_regex_p .. "[^|0-9A-Za-z]*([^|.-]*)") do
       local v = biditems[item]
