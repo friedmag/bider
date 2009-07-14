@@ -26,7 +26,7 @@ local sep_regex = "[-_ :;|!]"
 local debug = false
 local pick_active = false
 local auction_active = false
-local active_raid = ''
+local active_raid = nil
 local last_kill = ''
 
 -------------------
@@ -68,6 +68,10 @@ local function PostMsg(msg, target)
   else
     SendChatMessage("BidER: " .. msg, "WHISPER", nil, target)
   end
+end
+
+local function MyDate(at)
+  date("%m/%d/%y %H:%M:%S", at)
 end
 
 local function GetWidget(name)
@@ -259,6 +263,7 @@ end
 
 local function SubtractDKP(who, amount, item)
   local dkp = GetDKPSet()
+  local orig = dkp[who].total
   if NeedDKPReset(who) then
     dkp[who].total = 0
     AddDKPReset(who)
@@ -273,6 +278,7 @@ local function SubtractDKP(who, amount, item)
     dkp[who].total = dkp[who].total - amount
     if dkp[who].total < 0 then dkp[who].total = 0 end
   end
+  return (orig - dkp[who].total)
 end
 
 local function GetDKP(who, msg)
@@ -286,11 +292,12 @@ local function GetDKP(who, msg)
   end
 end
 
-local function AddLoot(who, item)
-  local event = raids[active_raid].events[last_kill]
-  if event ~= nil then
-    local loot = {who=who, item=item}
-    tinsert(event.loots, loot)
+local function AddLoot(who, item, amount)
+  if active_raid then
+    local event = active_raid.events[last_kill]
+    if event ~= nil then
+      tinsert(event.loots, {who=who, item=item, amount=amount})
+    end
   end
 end
 
@@ -310,8 +317,9 @@ end
 -- Hook Functions
 -----------------
 local function HandleBossEvent(boss, killed)
-  if active_raid ~= '' then
+  if active_raid then
     if killed then
+      Print("Killed " .. boss)
       GrantDKP(nil, 1)
       last_kill = boss
     end
@@ -321,7 +329,7 @@ local function HandleBossEvent(boss, killed)
       tinsert(raiders, GetRaiderInfo(i).name)
     end
 
-    local event = raids[active_raid].events[last_kill]
+    local event = active_raid.events[boss]
     if event == nil then
       event = {
         attempts = {},
@@ -331,17 +339,15 @@ local function HandleBossEvent(boss, killed)
     end
     event.killed = killed
     tinsert(event.attempts, time())
-    raids[active_raid].events[boss] = event
+    active_raid.events[boss] = event
   end
 end
 
 function events:DBM_Kill(mod)
-  Print("Received KILL callback: " .. mod.combatInfo.name)
   HandleBossEvent(mod.combatInfo.name, true)
 end
 
 function events:DBM_Wipe(mod)
-  Print("Received WIPE callback: " .. mod.combatInfo.name)
   HandleBossEvent(mod.combatInfo.name, false)
 end
 
@@ -541,19 +547,35 @@ end
 
 function events:RaidCommand(args)
   cmd, arg = strsplit(" ", args)
-  if cmd == "start" then
-    active_raid = arg
+  if cmd:lower() == "start" then
+    if active_raid then
+      Print("A raid is already active!  Please end or resume.")
+      return
+    end
     local new_raid = {
       start_time = time(),
+      zone = GetZoneText(),
       events = {},
     }
-    raids[active_raid] = new_raid
-    Print("Started raid: " .. active_raid)
-  elseif cmd == "end" then
-    raids[active_raid].end_time = time()
-    Print("Ended raid: " .. active_raid .. " (" ..
-      (raids[active_raid].end_time - raids[active_raid].start_time) .. ")")
-    active_raid = ''
+    raids[new_raid.start_time] = new_raid
+    active_raid = new_raid
+    Print("Started raid: " .. active_raid.zone .. " (" .. MyDate(active_raid.start_time) .. ")")
+  elseif cmd:lower() == "resume" then
+    local max_date = 0
+    for i,v in pairs(raids) do
+      if i > max_date then max_date = i end
+    end
+    if max_date == 0 then
+      Print("There is no raid to resume!")
+    else
+      active_raid = raids[max_date]
+      Print("Resumed raid in " .. active_raid.zone .. " (" .. MyDate(active_raid.start_time) .. ")")
+    end
+  elseif cmd:lower() == "end" then
+    active_raid.end_time = time()
+    Print("Ended raid: " .. active_raid.zone .. " (" ..
+      (active_raid.end_time - active_raid.start_time) .. ")")
+    active_raid = nil
   end
 end
 
@@ -667,10 +689,10 @@ function events:FinalizeAuctionCommand(args)
         end
       else
         tinsert(bidwinners[item], bidders[count].who)
-        SubtractDKP(bidders[count].who, bidders[count].amount, item)
+        local real_amount = SubtractDKP(bidders[count].who, bidders[count].amount, item)
         Print("Updated " .. bidders[count].who .. " dkp: " .. GetDKP(bidders[count].who), true)
         PostChat("Winner for " .. item .. " - " .. bidders[count].who)
-        AddLoot(bidders[count].who, item)
+        AddLoot(bidders[count].who, item, real_amount)
       end
     end
   end
