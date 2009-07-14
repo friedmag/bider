@@ -253,6 +253,10 @@ local function AddDKPReset(who)
   tinsert(dkpresets, who)
 end
 
+local function MinimumBid(item)
+  return minbids[biditems[item].lvl] or 0
+end
+
 local function SubtractDKP(who, amount, item)
   local dkp = GetDKPSet()
   if NeedDKPReset(who) then
@@ -868,10 +872,6 @@ local function OtherBids(who, item)
     end
   end
   return amount
-end
-
-local function MinimumBid(item)
-  return minbids[biditems[item].lvl] or 0
 end
 
 local function PlaceBid(who, item, bids, amount)
