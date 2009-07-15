@@ -504,8 +504,8 @@ function events:ResetCommand(args)
             count = count + 1
           end
         end
+        Print(out)
       end
-      Print(out)
     end
   end
 end
@@ -812,7 +812,7 @@ function events:DKPCommand(args)
     Print("End of DKP Listing.", true)
   elseif args:match("^[-+]?%d+$") then
     GrantDKP(nil, tonumber(args))
-  else
+  elseif args:match("%d") then
     for name,value in args:gmatch("(%a+)" .. sep_regex .. "(%d+)") do
       if dkp[name] == nil then dkp[name] = {} end
       if dkp[name].total ~= nil then old_value = dkp[name].total else old_value = nil end
@@ -825,6 +825,11 @@ function events:DKPCommand(args)
       else
         Print("DKP value for " .. name .. " unchanged (" .. old_value .. ")", true)
       end
+    end
+  else
+    for name in args:gmatch("(%a+)") do
+      if dkp[name] == nil then dkp[name] = {total=0} end
+      Print("DKP for " .. name .. ": " .. dkp[name].total, true)
     end
   end
 end
