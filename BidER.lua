@@ -71,7 +71,7 @@ local function PostMsg(msg, target)
 end
 
 local function MyDate(at)
-  date("%m/%d/%y %H:%M:%S", at)
+  return date("%m/%d/%y %H:%M:%S", at)
 end
 
 local function GetWidget(name)
