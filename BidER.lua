@@ -771,13 +771,14 @@ function events:EditAuctionCommand(args)
     if biditems[link] == nil then
       Print("Not taking bids on " .. link)
     else
-      if tonumber(amount) == nil and amount ~= "win" then
+      amount = amount:lower()
+      if tonumber(amount) == nil and not contains({"win", "cancel"}, amount) then
         Print("Invalid bid amount '" .. amount .. "' - must be a number or 'win'")
       else
         local old_bid, new_bid, toprint = biditems[link].bids[who], {}, ""
         if tonumber(amount) == nil then
           -- Win case
-          if amount:lower() == "win" then
+          if amount == "win" then
             if old_bid == nil then
               new_bid.win = true
               new_bid.amount = 0
@@ -786,7 +787,7 @@ function events:EditAuctionCommand(args)
               else new_bid.win = false end
               new_bid.amount = old_bid.amount
             end
-          elseif amount:lower() == "cancel" then
+          elseif amount == "cancel" then
             new_bid = nil
           end
         else new_bid.amount = tonumber(amount) end
