@@ -318,10 +318,17 @@ end
 local function GrantDKP(who, amount)
   local dkp = GetDKPSet()
   if who == nil then
+    local given = {}
     for i=1,GetNumRaidMembers() do
       local name = GetRaiderInfo(i).name
-      if dkp[name] == nil then dkp[name] = {total=amount}
-      else dkp[name].total = dkp[name].total + amount end
+      -- Lookup if this is an alt, register as the main toon
+      -- so that they will only get one point
+      if aliases[name] then name = aliases[name] end
+      if not contains(given, name) then
+        if dkp[name] == nil then dkp[name] = {total=amount}
+        else dkp[name].total = dkp[name].total + amount end
+        tinsert(given, name)
+      end
     end
     Print("Added " .. amount .. " DKP for all raid members", true)
   end
