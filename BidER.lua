@@ -350,16 +350,19 @@ local function HandleBossEvent(boss, killed)
       tinsert(raiders, GetRaiderInfo(i).name)
     end
 
+    local attempt = {
+      time = time(),
+      attendance = raiders,
+      killed = killed,
+    }
     local event = active_raid.events[boss]
     if event == nil then
       event = {
         attempts = {},
-        attendance = raiders,
         loots = {},
       }
     end
-    event.killed = killed
-    tinsert(event.attempts, time())
+    tinsert(event.attempts, attempt)
     active_raid.events[boss] = event
   end
 end
