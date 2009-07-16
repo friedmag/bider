@@ -107,6 +107,17 @@ local function GetItemInfo(item)
   return r
 end
 
+local function HandleAliases()
+  -- Handle character aliases - this is a simple map of names to other names.  Just 
+  -- maps one to the other, primarily in the form of BidER_Aliases[alt_name] = main_name
+  for alt,main in pairs(aliases) do
+    for j,w in pairs(dkp) do
+      if w[main] == nil then w[main] = {total=0} end
+      w[alt] = w[main]
+    end
+  end
+end
+
 local function ImportDKP(set, str)
   if dkp[set] == nil then dkp[set] = {} end
   local dkp = dkp[set]
@@ -236,7 +247,10 @@ local function EndItemPicking()
 end
 
 local function GetDKPSet()
-  if dkp[settings.dkp] == nil then dkp[settings.dkp] = {} end
+  if dkp[settings.dkp] == nil then
+    dkp[settings.dkp] = {}
+    HandleAliases() -- initialize aliases for this new DKP set
+  end
   return dkp[settings.dkp]
 end
 
@@ -367,14 +381,7 @@ function events:ADDON_LOADED(addon, ...)
     aliases = BidER_Aliases
     minbids = BidER_MinimumBids
 
-    -- Handle character aliases - this is a simple map of names to other names.  Just 
-    -- maps one to the other, primarily in the form of BidER_Aliases[alt_name] = main_name
-    for alt,main in pairs(aliases) do
-      for j,w in pairs(dkp) do
-        if w[main] == nil then w[main] = {total=0} end
-        w[alt] = w[main]
-      end
-    end
+    HandleAliases()
 
     if BidER_Imports ~= nil then
       Print("Handling data imports...")
@@ -527,10 +534,7 @@ function events:AliasCommand(args)
   else
     alt, main = FixName(alt), FixName(main)
     aliases[alt] = main
-    for j,w in pairs(dkp) do
-      if w[main] == nil then w[main] = {total=0} end
-      w[alt] = w[main]
-    end
+    HandleAliases()
     Print("Created alias " .. alt .. " for " .. main)
   end
 end
