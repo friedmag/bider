@@ -306,7 +306,7 @@ local function GetDKP(who, msg)
   end
 end
 
-local function AddLoot(who, item, amount)
+local function AddLoot(item, who, amount)
   if active_raid then
     local event = active_raid.events[last_kill]
     if event ~= nil then
@@ -701,12 +701,13 @@ function events:FinalizeAuctionCommand(args)
         if settings.enchanter ~= "" then
           tinsert(bidwinners[item], settings.enchanter)
         end
+        AddLoot(item)
       else
         tinsert(bidwinners[item], bidders[count].who)
         local real_amount = SubtractDKP(bidders[count].who, bidders[count].amount, item)
         Print("Updated " .. bidders[count].who .. " dkp: " .. GetDKP(bidders[count].who), true)
         PostChat("Winner for " .. item .. " - " .. bidders[count].who)
-        AddLoot(bidders[count].who, item, real_amount)
+        AddLoot(item, bidders[count].who, real_amount)
       end
     end
   end
