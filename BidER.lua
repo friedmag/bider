@@ -28,6 +28,7 @@ local pick_active = false
 local auction_active = false
 local active_raid = nil
 local last_kill = ''
+local raid_buffs = {}
 
 -------------------
 -- Helper Functions
@@ -115,6 +116,32 @@ local function GetItemInfo(item)
   local r = {}
   r.itemName, r.itemLink, r.itemRarity, r.itemLevel, r.itemMinLevel, r.itemType, r.itemSubType, r.itemStackCount,
     r.itemEquipLoc, r.itemTexture = _G.GetItemInfo(item) 
+  return r
+end
+
+function GetBuffInfo(unit, index, castable)
+  local r = {}
+  r.name, r.rank, r.icon, r.count, r.debuffType, r.duration, r.expirationTime, r.source, r.isStealable 
+    = UnitBuff(unit, index, castable)
+  return (r.name and r)
+end
+
+function GetAllBuffs(unit, castable)
+  local i, buff, buffs = 1, nil, {}
+  repeat
+    buff = GetBuffInfo(unit, i, castable)
+    tinsert(buffs, buff)
+    i = i + 1
+  until buff == nil
+  return buffs
+end
+
+function GetAllRaidBuffs(castable)
+  local r = {}
+  for i=1,GetNumRaidMembers() do
+    local name = GetRaiderInfo(i).name
+    r[name] = GetAllBuffs(name, castable)
+  end
   return r
 end
 
@@ -379,6 +406,7 @@ local function HandleBossEvent(boss, killed)
     local attempt = {
       time = time(),
       attendance = raiders,
+      buffs = raid_buffs,
       killed = killed,
     }
     local event = active_raid.events[boss]
@@ -432,6 +460,18 @@ function events:DBM_Wipe(mod)
   HandleBossEvent(mod.combatInfo.name, false)
 end
 
+function events:DBM_Pull(mod, delay, synced)
+  local boss = mod.combatInfo.name
+  raid_buffs = {}
+  for i,v in pairs(GetAllRaidBuffs()) do
+    local buffs = {}
+    for j,w in pairs(v) do
+      tinsert(buffs, w.name)
+    end
+    raid_buffs[i] = buffs
+  end
+end
+
 function events:ADDON_LOADED(addon, ...)
   if addon:lower() == "bider" then
     if BidER_DKP == nil then BidER_DKP = {} end
@@ -474,6 +514,7 @@ function events:ADDON_LOADED(addon, ...)
   elseif addon:lower() == "dbm-core" then
     DBM:RegisterCallback('kill', function(...) events:DBM_Kill(...) end)
     DBM:RegisterCallback('wipe', function(...) events:DBM_Wipe(...) end)
+    DBM:RegisterCallback('pull', function(...) events:DBM_Pull(...) end)
     Print("Registered callbacks with DBM.")
   end
 end
