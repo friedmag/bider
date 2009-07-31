@@ -4,5 +4,5 @@
 ## Notes: Handles bids/DKP system for Eternal Retribution
 ## Email: chrisqeld@gmail.com
 ## URL: 
-## SavedVariables: BidER_DKP, BidER_DKPResets, BidER_Settings, BidER_MinimumBids, BidER_Aliases, BidER_Raids
+## SavedVariables: BidER_DKP, BidER_DKPResets, BidER_Settings, BidER_MinimumBids, BidER_Raids, GuildRaidSnapShot_SnapShots, GuildRaidSnapShot_Loot
 BidER.xml

@@ -1,5 +1,6 @@
 <Ui xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns='http://www.blizzard.com/wow/ui/' xsi:schemaLocation='http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd'>
   <Script file='BidER.lua' />
+  <Script file='GRSS_Data.lua' />
 
   <Frame name="BidERFrame" toplevel="true" frameStrata="HIGH" hidden="true" parent="UIParent" enableMouse="true" movable="true">
     <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
