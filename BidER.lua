@@ -350,20 +350,22 @@ local function AddLoot(item, who, amount)
     if event ~= nil then
       tinsert(event.loots, {who=who, item=item, amount=amount})
 
-      -- GRSS Compatibility
-      local curdate = date("%Y-%m-%d", active_raid.start_time)
-      local loot_table = {
-        player = who,
-        item = item:match("%[([^%]]+)%]"),
-        date = MyDate(nil, true),
-        points = amount,
-        hardpoints = 0,
-        system = GRSSCurrentSystem,
-        RealmName = GetRealmName(),
-      }
-    if GuildRaidSnapShot_Loot == nil then GuildRaidSnapShot_Loot = {} end
-      if GuildRaidSnapShot_Loot[curdate] == nil then GuildRaidSnapShot_Loot[curdate] = {} end
-      tinsert(GuildRaidSnapShot_Loot[curdate], loot_table)
+      -- GRSS Compatibility (does not work for DE loots!)
+      if who ~= nil then
+        local curdate = date("%Y-%m-%d", active_raid.start_time)
+        local loot_table = {
+          player = who,
+          item = item:match("%[([^%]]+)%]"),
+          date = MyDate(nil, true),
+          points = amount,
+          hardpoints = 0,
+          system = GRSSCurrentSystem,
+          RealmName = GetRealmName(),
+        }
+        if GuildRaidSnapShot_Loot == nil then GuildRaidSnapShot_Loot = {} end
+        if GuildRaidSnapShot_Loot[curdate] == nil then GuildRaidSnapShot_Loot[curdate] = {} end
+        tinsert(GuildRaidSnapShot_Loot[curdate], loot_table)
+      end
     end
   end
 end
