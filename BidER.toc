@@ -1,4 +1,4 @@
-## Interface: 30100
+## Interface: 30200
 ## Title: BidER
 ## Author: Quilderaumo
 ## Notes: Handles bids/DKP system for Eternal Retribution
