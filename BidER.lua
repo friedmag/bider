@@ -1099,7 +1099,8 @@ function events:CHAT_MSG_WHISPER(msg, from, ...)
         if num ~= nil then
           PlaceBid(from, item, v.bids, num)
         else
-          PostMsg("Couldn't determine bid for " .. item .. ": '" .. value .. "'", from)
+          PostMsg("Invalid bid for " .. item .. ".  Please try again in the form of \"" ..
+            item .. "<bid>\", where <bid> is between 0 and " .. GetDKP(from), from)
         end
       end
     end
