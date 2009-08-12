@@ -256,7 +256,7 @@ local function AddLink(item_link, count)
       Print("Updated item: " .. item_link .. "x" .. v.count)
       return
     end
-    biditems[item_link] = {bids={}, count=count, lvl=GetItemInfo(item_link).itemLevel}
+    biditems[item_link] = {bids={}, count=count, info=GetItemInfo(item_link)}
     Print("Adding item: " .. item_link .. "x" .. count)
   end
 end
@@ -310,7 +310,18 @@ local function AddDKPReset(who)
 end
 
 local function MinimumBid(item)
-  return minbids[biditems[item].lvl] or 0
+  local result = minbids[biditems[item].info.itemLevel]
+  if result == nil then
+    for i,v in pairs(minbids) do
+      if type(i) == 'string' then
+        if biditems[item].info.itemName:match(i) then
+          result = v
+          break
+        end
+      end
+    end
+  end
+  return result or 0
 end
 
 local function SubtractDKP(who, amount, item)
