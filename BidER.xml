@@ -164,9 +164,24 @@
           </OnClick>
         </Scripts>
       </Button>
-      <Button name="$parentEndRaidButton" inherits="UIPanelButtonTemplate" text="End Raid" disabled="true">
+      <Button name="$parentAssignItemsButton" inherits="UIPanelButtonTemplate" text="Assign Item(s)">
         <Anchors>
           <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentFinalizeAuctionButton">
+            <Offset><AbsDimension x="0" y="0"/></Offset>
+          </Anchor>
+        </Anchors>
+        <Size>
+          <AbsDimension x="220" y="25"/>
+        </Size>
+        <Scripts>
+          <OnClick>
+            BidER_Event("AssignAuctionCommand");
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentEndRaidButton" inherits="UIPanelButtonTemplate" text="End Raid">
+        <Anchors>
+          <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentAssignItemsButton">
             <Offset><AbsDimension x="0" y="0"/></Offset>
           </Anchor>
         </Anchors>
