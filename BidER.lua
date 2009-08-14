@@ -373,7 +373,7 @@ local function AddLoot(item, who, amount)
           item = item:match("%[([^%]]+)%]"),
           date = MyDate(nil, true),
           points = amount,
-          hardpoints = 0,
+          hardpoints = amount,
           system = GRSSCurrentSystem,
           RealmName = GetRealmName(),
         }
