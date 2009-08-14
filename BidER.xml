@@ -15,30 +15,30 @@
       </EdgeSize>
     </Backdrop>
     <Size>
-      <AbsDimension x="230" y="335"/>
+      <AbsDimension x="230" y="286"/>
     </Size>
     <Anchors>
       <Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parent"/>
     </Anchors>
     <Layers>
       <Layer level="BACKGROUND">
-        <FontString name="BidERTitleText" text="BidER" inherits="GameFontGreen" justifyH="CENTER" justifyV="TOP">
+        <FontString name="$parentTitleText" text="BidER" inherits="GameFontGreen" justifyH="CENTER" justifyV="TOP">
           <Anchors>
             <Anchor point="TOP" relativePoint="TOP" relativeTo="$parent">
               <Offset><AbsDimension x="0" y="-10"/></Offset>
             </Anchor>
           </Anchors>
         </FontString>
-        <FontString name="BidERItemText" text="Item name here" inherits="GameFontNormal" justifyH="CENTER" justifyV="TOP">
+        <FontString name="$parentDKPText" text="Item name here" inherits="GameFontNormal" justifyH="CENTER" justifyV="TOP">
           <Anchors>
-            <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="BidERTitleText">
+            <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentTitleText">
               <Offset><AbsDimension x="0" y="-3"/></Offset>
             </Anchor>
           </Anchors>
         </FontString>
-        <FontString name="BidERStatusText" text="Status" inherits="GameFontNormal" justifyH="CENTER" justifyV="TOP">
+        <FontString name="$parentStatusText" text="Status" inherits="GameFontNormal" justifyH="CENTER" justifyV="TOP">
           <Anchors>
-            <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="BidERItemText">
+            <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentDKPText">
               <Offset><AbsDimension x="0" y="-3"/></Offset>
             </Anchor>
           </Anchors>
@@ -47,7 +47,7 @@
     </Layers>
     <Frames>
       <!-- top buttons -->
-      <Button name="BidERCloseButton" inherits="UIPanelCloseButton">
+      <Button name="$parentCloseButton" inherits="UIPanelCloseButton">
         <Anchors>
           <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="$parent">
             <Offset><AbsDimension x="0" y="0"/></Offset>
@@ -59,9 +59,9 @@
           </OnClick>
         </Scripts>
       </Button>
-      <Button name="BidERPickItemButton" inherits="UIPanelButtonTemplate" text="Pick Item to Auction">
+      <Button name="$parentStartRaidButton" inherits="UIPanelButtonTemplate" text="Start Raid">
         <Anchors>
-          <Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="BidERCloseButton">
+          <Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parentCloseButton">
             <Offset><AbsDimension x="-5" y="-22"/></Offset>
           </Anchor>
         </Anchors>
@@ -70,13 +70,13 @@
         </Size>
         <Scripts>
           <OnClick>
-            BidERPickItem();
+            BidER_Event("RaidCommand", "start");
           </OnClick>
         </Scripts>
       </Button>
-      <Button name="BidERStartAuctionButton" inherits="UIPanelButtonTemplate" text="Start and Announce Auction">
+      <Button name="$parentPickItemsButton" inherits="UIPanelButtonTemplate" text="Pick Items to Auction">
         <Anchors>
-          <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="BidERPickItemButton">
+          <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentStartRaidButton">
             <Offset><AbsDimension x="0" y="0"/></Offset>
           </Anchor>
         </Anchors>
@@ -85,30 +85,13 @@
         </Size>
         <Scripts>
           <OnClick>
-            BidERStartAuction();
+            BidER_Event("PickCommand", "loot");
           </OnClick>
         </Scripts>
       </Button>
-
-      <!-- bottom buttons -->
-      <Button name="BidEREditBidsButton" inherits="UIPanelButtonTemplate" text="Edit Bids">
+      <Button name="$parentStartAuctionButton" inherits="UIPanelButtonTemplate" text="Start and Announce Auction">
         <Anchors>
-          <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent">
-            <Offset><AbsDimension x="-5" y="5"/></Offset>
-          </Anchor>
-        </Anchors>
-        <Size>
-          <AbsDimension x="220" y="25"/>
-        </Size>
-        <Scripts>
-          <OnClick>
-            BidEREditBids();
-          </OnClick>
-        </Scripts>
-      </Button>
-      <Button name="BidEREndAuctionButton" inherits="UIPanelButtonTemplate" text="End Auction, Announce Winner">
-        <Anchors>
-          <Anchor point="BOTTOM" relativePoint="TOP" relativeTo="BidEREditBidsButton">
+          <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentPickItemsButton">
             <Offset><AbsDimension x="0" y="0"/></Offset>
           </Anchor>
         </Anchors>
@@ -117,13 +100,13 @@
         </Size>
         <Scripts>
           <OnClick>
-            BidEREndAuction();
+            BidER_Event("StartAuctionCommand");
           </OnClick>
         </Scripts>
       </Button>
-      <Button name="BidERWarnEndingButton" inherits="UIPanelButtonTemplate" text="Warn: Auction Ending Soon">
+      <Button name="$parentAnnounceAuctionButton" inherits="UIPanelButtonTemplate" text="Announce Current Status">
         <Anchors>
-          <Anchor point="BOTTOM" relativePoint="TOP" relativeTo="BidEREndAuctionButton">
+          <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentStartAuctionButton">
             <Offset><AbsDimension x="0" y="0"/></Offset>
           </Anchor>
         </Anchors>
@@ -132,13 +115,13 @@
         </Size>
         <Scripts>
           <OnClick>
-            BidERWarnEnding();
+            BidER_Event("AnnounceAuctionCommand");
           </OnClick>
         </Scripts>
       </Button>
-      <Button name="BidERSayBidsButton" inherits="UIPanelButtonTemplate" text="Announce Current Bid Level">
+      <Button name="$parentWarnEndingButton" inherits="UIPanelButtonTemplate" text="Warn: Auction Ending Soon">
         <Anchors>
-          <Anchor point="BOTTOM" relativePoint="TOP" relativeTo="BidERWarnEndingButton">
+          <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentAnnounceAuctionButton">
             <Offset><AbsDimension x="0" y="0"/></Offset>
           </Anchor>
         </Anchors>
@@ -147,7 +130,52 @@
         </Size>
         <Scripts>
           <OnClick>
-            BidERSayBids();
+            BidER_Event("AnnounceAuctionCommand", "end");
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentEndAuctionButton" inherits="UIPanelButtonTemplate" text="End Auction">
+        <Anchors>
+          <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentWarnEndingButton">
+            <Offset><AbsDimension x="0" y="0"/></Offset>
+          </Anchor>
+        </Anchors>
+        <Size>
+          <AbsDimension x="220" y="25"/>
+        </Size>
+        <Scripts>
+          <OnClick>
+            BidER_Event("EndAuctionCommand");
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentFinalizeAuctionButton" inherits="UIPanelButtonTemplate" text="Finalize Auction">
+        <Anchors>
+          <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentEndAuctionButton">
+            <Offset><AbsDimension x="0" y="0"/></Offset>
+          </Anchor>
+        </Anchors>
+        <Size>
+          <AbsDimension x="220" y="25"/>
+        </Size>
+        <Scripts>
+          <OnClick>
+            BidER_Event("FinalizeAuctionCommand");
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentEndRaidButton" inherits="UIPanelButtonTemplate" text="End Raid" disabled="true">
+        <Anchors>
+          <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentFinalizeAuctionButton">
+            <Offset><AbsDimension x="0" y="0"/></Offset>
+          </Anchor>
+        </Anchors>
+        <Size>
+          <AbsDimension x="220" y="25"/>
+        </Size>
+        <Scripts>
+          <OnClick>
+            BidER_Event("RaidCommand", "end");
           </OnClick>
         </Scripts>
       </Button>
@@ -158,7 +186,14 @@
         this:RegisterEvent("ADDON_LOADED")
         this:RegisterEvent("CHAT_MSG_WHISPER")
         this:RegisterForDrag("LeftButton")
+        tinsert(UISpecialFrames, this:GetName())
       </OnLoad>
+      <OnShow>
+        PlaySound("igCharacterInfoOpen")
+      </OnShow>
+      <OnHide>
+        PlaySound("igCharacterInfoClose")
+      </OnHide>
       <OnEvent>
         BidER_SendEvent(self, event, ...)
       </OnEvent>

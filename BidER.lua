@@ -4,6 +4,10 @@
 -- Type /ber or /bider to open.
 -- 
 
+-- Bindings
+BINDING_HEADER_BIDER = "BidER"
+BINDING_NAME_BIDERUI = "BidER UI Toggle"
+
 -- Constants:
 local VERSION = "1.0"
 local FRAME = "BidERFrame"
@@ -523,6 +527,9 @@ function events:ADDON_LOADED(addon, ...)
       BidER_Imports = nil
     end
 
+    -- Version backcompat
+    if settings.last_call == nil then settings.last_call = 'Last call!' end
+
     Print("Loaded " .. VERSION)
   elseif addon:lower() == "dbm-core" then
     DBM:RegisterCallback('kill', function(...) events:DBM_Kill(...) end)
@@ -555,6 +562,8 @@ function events:SlashCommand(args, ...)
     BidER_Event("EndAuctionCommand", args)
   elseif cmd == "debug" then
     BidER_Event("DebugCommand", args)
+  elseif cmd == "ui" then
+    BidER_Event("UICommand", args)
   elseif cmd == "reset" then
     BidER_Event("ResetCommand", args)
   elseif cmd == "alias" then
@@ -601,8 +610,12 @@ local function DumpBidInfo()
 end
 
 function events:UICommand(args)
-  BidERItemText:SetText("[" .. settings.dkp .. "]")
-  frame:Show()
+  if frame:IsShown() then
+    frame:Hide()
+  else
+    GetWidget("DKPText"):SetText("[" .. settings.dkp .. "]")
+    frame:Show()
+  end
 end
 
 function events:DebugCommand(args)
@@ -755,6 +768,9 @@ end
 function events:AnnounceAuctionCommand(args)
   if auction_active then
     DumpBidInfo()
+    if args == "end" then
+      PostChat(settings.last_call)
+    end
   end
 end
 

@@ -1,0 +1,5 @@
+<Bindings>
+  <Binding name="BIDERUI" description="Toggle the BidER UI" header="BIDER">
+    BidER_Event("UICommand");
+  </Binding>
+</Bindings>
