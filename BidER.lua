@@ -203,7 +203,6 @@ end
 -----------------
 function events:OnLoad()
   frame = GetWidget("")
-  hooksecurefunc("ChatFrame_OnHyperlinkShow", function(...) BidER_Event("HyperlinkShow", ...) end)
 end
 
 -----------------
@@ -1020,13 +1019,6 @@ function events:PickCommand(args)
       end
     end
   end
-end
-
--- ChatFrame_OnHyperlinkShow hook: on shift-left-click, if we're collecting items to bid on, add it
-function events:HyperlinkShow(ref, link_text, item_link, button, ...)
-	if pick_active and IsShiftKeyDown() and button == "LeftButton" then
-		AddLink(item_link, 1);
-	end
 end
 
 local function CancelBid(who, item, bids)
