@@ -161,6 +161,10 @@ local function HandleAliases()
   end
 end
 
+local function GetMainName(who)
+  return (aliases[who] or who)
+end
+
 local function ImportDKP(set, str)
   if dkp[set] == nil then dkp[set] = {} end
   local dkp = dkp[set]
@@ -303,14 +307,12 @@ end
 local function NeedDKPReset(who)
   local dkpresets = GetDKPResetsSet()
   if dkpresets == nil then return false end
-  if aliases[who] ~= nil then who = aliases[who] end
-  return not contains(dkpresets, who)
+  return not contains(dkpresets, GetMainName(who))
 end
 
 local function AddDKPReset(who)
   local dkpresets = GetDKPResetsSet()
-  if aliases[who] ~= nil then who = aliases[who] end
-  tinsert(dkpresets, who)
+  tinsert(dkpresets, GetMainName(who))
 end
 
 local function MinimumBid(item)
@@ -393,7 +395,7 @@ local function GrantDKP(who, amount)
       local name = GetRaiderInfo(i).name
       -- Lookup if this is an alt, register as the main toon
       -- so that they will only get one point
-      if aliases[name] then name = aliases[name] end
+      name = GetMainName(name)
       if not contains(given, name) then
         if dkp[name] == nil then dkp[name] = {total=amount}
         else dkp[name].total = dkp[name].total + amount end
@@ -452,7 +454,7 @@ local function HandleBossEvent(boss, killed)
       local raid_info = ""
       for i=1,GetNumRaidMembers() do
         tmp = GetRaiderInfo(i)
-        tmp = tmp.name .. ":" .. tmp.zone
+        tmp = GetMainName(tmp.name) .. ":" .. tmp.zone
         if raid_info == "" then raid_info = tmp
         else raid_info = raid_info .. ", " .. tmp end
       end
