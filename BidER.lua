@@ -23,6 +23,7 @@ local frame
 local events = {}
 local biditems = {}
 local bidwinners = {}
+local have_grss = false
 local link_regex = "|c%x+|H[^|]+|h%[[^|]+%]|h|r"
 local link_regex_p = "(" .. link_regex .. ")"
 local sep_regex = "[-_ :;|!]"
@@ -365,7 +366,7 @@ local function AddLoot(item, who, amount)
       tinsert(event.loots, {who=who, item=item, amount=amount})
 
       -- GRSS Compatibility (does not work for DE loots!)
-      if who ~= nil then
+      if have_grss and who ~= nil then
         local curdate = date("%Y-%m-%d", active_raid.start_time)
         local loot_table = {
           player = who,
@@ -436,35 +437,37 @@ local function HandleBossEvent(boss, killed)
     active_raid.events[boss] = event
 
     -- GRSS Compatibility
-    local kill_info = boss .. " " .. MyDate(nil, true)
-    local tmp
+    if have_grss then
+      local kill_info = boss .. " " .. MyDate(nil, true)
+      local tmp
 
-    local guild_info = ""
-    for i=1,GetNumGuildMembers() do
-      tmp = GetGuildieInfo(i)
-      tmp = tmp.name .. ":" .. tmp.zone
-      if guild_info == "" then guild_info = tmp
-      else guild_info = guild_info .. ", " .. tmp end
+      local guild_info = ""
+      for i=1,GetNumGuildMembers() do
+        tmp = GetGuildieInfo(i)
+        tmp = tmp.name .. ":" .. tmp.zone
+        if guild_info == "" then guild_info = tmp
+        else guild_info = guild_info .. ", " .. tmp end
+      end
+
+      local raid_info = ""
+      for i=1,GetNumRaidMembers() do
+        tmp = GetRaiderInfo(i)
+        tmp = tmp.name .. ":" .. tmp.zone
+        if raid_info == "" then raid_info = tmp
+        else raid_info = raid_info .. ", " .. tmp end
+      end
+
+      local event_table = {
+        WaitList = "",
+        Guild = guild_info,
+        Raid = raid_info,
+        points = killed and 1 or 0,
+        system = GRSSCurrentSystem,
+        RealmName = GetRealmName(),
+      }
+      if GuildRaidSnapShot_SnapShots == nil then GuildRaidSnapShot_SnapShots = {} end
+      GuildRaidSnapShot_SnapShots[kill_info] = event_table
     end
-
-    local raid_info = ""
-    for i=1,GetNumRaidMembers() do
-      tmp = GetRaiderInfo(i)
-      tmp = tmp.name .. ":" .. tmp.zone
-      if raid_info == "" then raid_info = tmp
-      else raid_info = raid_info .. ", " .. tmp end
-    end
-
-    local event_table = {
-      WaitList = "",
-      Guild = guild_info,
-      Raid = raid_info,
-      points = killed and 1 or 0,
-      system = GRSSCurrentSystem,
-      RealmName = GetRealmName(),
-    }
-    if GuildRaidSnapShot_SnapShots == nil then GuildRaidSnapShot_SnapShots = {} end
-    GuildRaidSnapShot_SnapShots[kill_info] = event_table
   end
 end
 
@@ -505,13 +508,16 @@ function events:ADDON_LOADED(addon, ...)
     minbids = BidER_MinimumBids
 
     -- GRSS Compatibility
-    GRSS_Initialize_Data()
+    if GRSS_Initialize_Data ~= nil then
+      have_grss = true
+      GRSS_Initialize_Data()
 
-    for alt,main in pairs(GRSS_Alts) do
-      aliases[FixName(alt)] = FixName(main)
+      for alt,main in pairs(GRSS_Alts) do
+        aliases[FixName(alt)] = FixName(main)
+      end
+
+      HandleAliases()
     end
-
-    HandleAliases()
 
     if BidER_Imports ~= nil then
       Print("Handling data imports...")
