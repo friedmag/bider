@@ -575,6 +575,8 @@ function events:SlashCommand(args, ...)
     BidER_Event("ResetCommand", args)
   elseif cmd == "alias" then
     BidER_Event("AliasCommand", args)
+  elseif cmd == "kill" then
+    BidER_Event("KillCommand", args)
   elseif cmd:match('^d') then
     BidER_Event("DKPCommand", args)
   elseif cmd:match('^l') then
@@ -685,6 +687,10 @@ function events:AliasCommand(args)
     HandleAliases()
     Print("Created alias " .. alt .. " for " .. main)
   end
+end
+
+function events:KillCommand(args)
+  HandleBossEvent(args, true)
 end
 
 function events:InitCommand(args)
