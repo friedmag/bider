@@ -518,6 +518,17 @@ function events:ADDON_LOADED(addon, ...)
         aliases[FixName(alt)] = FixName(main)
       end
 
+      for name,set in pairs(GRSS_Full_DKP) do
+        for i,v in ipairs(set) do
+          if dkp[name] == nil then
+            dkp[name] = {}
+          end
+          if dkp[name][v.name] == nil then
+            dkp[name][v.name] = {total = v.earned - v.spent + v.adj}
+          end
+        end
+      end
+
       HandleAliases()
     end
 
