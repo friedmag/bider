@@ -550,9 +550,9 @@ function events:ADDON_LOADED(addon, ...)
 
     Print("Loaded " .. VERSION)
   elseif addon:lower() == "dbm-core" then
-    DBM:RegisterCallback('kill', function(...) events:DBM_Kill(...) end)
-    DBM:RegisterCallback('wipe', function(...) events:DBM_Wipe(...) end)
-    DBM:RegisterCallback('pull', function(...) events:DBM_Pull(...) end)
+    DBM:RegisterCallback('kill', function(ev, ...) events:DBM_Kill(...) end)
+    DBM:RegisterCallback('wipe', function(ev, ...) events:DBM_Wipe(...) end)
+    DBM:RegisterCallback('pull', function(ev, ...) events:DBM_Pull(...) end)
     Print("Registered callbacks with DBM.")
   end
 end
