@@ -474,15 +474,15 @@ local function HandleBossEvent(boss, killed)
 end
 
 function events:DBM_Kill(mod)
-  HandleBossEvent(mod.combatInfo.name, true)
+  HandleBossEvent(mod.localization.general.name, true)
 end
 
 function events:DBM_Wipe(mod)
-  HandleBossEvent(mod.combatInfo.name, false)
+  HandleBossEvent(mod.localization.general.name, false)
 end
 
 function events:DBM_Pull(mod, delay, synced)
-  local boss = mod.combatInfo.name
+  local boss = mod.localization.general.name
   raid_buffs = {}
   for i,v in pairs(GetAllRaidBuffs()) do
     local buffs = {}
