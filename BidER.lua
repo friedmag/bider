@@ -165,18 +165,6 @@ local function GetMainName(who)
   return (aliases[who] or who)
 end
 
-local function ImportDKP(set, str)
-  if dkp[set] == nil then dkp[set] = {} end
-  local dkp = dkp[set]
-  for i,v in pairs(dkp) do dkp[i] = nil end -- erase existing DKP
-  local count = 0
-  for who,points,looted in str:gmatch("(%a+): (%d+) %((%d+)%)") do
-    dkp[who] = {total = tonumber(points)}
-    count = count + 1
-  end
-  Print("Imported DKP '" .. set .. "': " .. count .. " players", true)
-end
-
 local function FixName(name)
   return (name:sub(1,1):upper() .. name:sub(2):lower())
 end
@@ -500,7 +488,6 @@ function events:ADDON_LOADED(addon, ...)
     if BidER_Raids == nil then BidER_Raids = {} end
     if BidER_Settings == nil then BidER_Settings = {enchanter="", threshold=3, dkp='default', channel='Officer'} end
     if BidER_Aliases == nil then BidER_Aliases = {} end
-    if BidER_Imports == nil then BidER_Imports = {} end
     if BidER_MinimumBids == nil then BidER_MinimumBids = {[219]=5, [226]=10, [232]=15, [239]=20} end
     dkp = BidER_DKP
     dkpresets = BidER_DKPResets
@@ -530,19 +517,6 @@ function events:ADDON_LOADED(addon, ...)
       end
 
       HandleAliases()
-    end
-
-    if BidER_Imports ~= nil then
-      Print("Handling data imports...")
-      for i,v in pairs(BidER_Imports) do
-        if i == 'dkp' then
-          Print("Loading DKP...")
-          for j,w in pairs(v) do
-            ImportDKP(j, w)
-          end
-        end
-      end
-      BidER_Imports = nil
     end
 
     -- Version backcompat
@@ -588,6 +562,8 @@ function events:SlashCommand(args, ...)
     BidER_Event("AliasCommand", args)
   elseif cmd == "kill" then
     BidER_Event("KillCommand", args)
+  elseif cmd == "import" then
+    BidER_Event("ImportCommand", args)
   elseif cmd:match('^d') then
     BidER_Event("DKPCommand", args)
   elseif cmd:match('^l') then
@@ -702,6 +678,25 @@ end
 
 function events:KillCommand(args)
   HandleBossEvent(args, true)
+end
+
+function events:ImportCommand(args)
+  if have_grss == nil then
+    Print("GRSS data is not available for import.")
+    return
+  end
+  grss_dkp = GRSS_Full_DKP[settings.dkp]
+  if grss_dkp == nil then
+    Print("GRSS data does not exist for DKP set \"" .. settings.dkp .. "\"")
+    return
+  end
+  local dkp = GetDKPSet()
+  local imported = 0
+  for i,v in ipairs(grss_dkp) do
+    dkp[v.name] = {total = v.earned - v.spent + v.adj}
+    imported = imported + 1
+  end
+  Print("Imported DKP for " .. imported .. " players.")
 end
 
 function events:InitCommand(args)

@@ -15,7 +15,7 @@
       </EdgeSize>
     </Backdrop>
     <Size>
-      <AbsDimension x="230" y="286"/>
+      <AbsDimension x="230" y="311"/>
     </Size>
     <Anchors>
       <Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parent"/>
@@ -59,10 +59,25 @@
           </OnClick>
         </Scripts>
       </Button>
-      <Button name="$parentStartRaidButton" inherits="UIPanelButtonTemplate" text="Start Raid">
+      <Button name="$parentImportGRSSButton" inherits="UIPanelButtonTemplate" text="Import GRSS DKP">
         <Anchors>
           <Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parentCloseButton">
             <Offset><AbsDimension x="-5" y="-22"/></Offset>
+          </Anchor>
+        </Anchors>
+        <Size>
+          <AbsDimension x="220" y="25"/>
+        </Size>
+        <Scripts>
+          <OnClick>
+            BidER_Event("ImportCommand");
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentStartRaidButton" inherits="UIPanelButtonTemplate" text="Start Raid">
+        <Anchors>
+          <Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parentImportGRSSButton">
+            <Offset><AbsDimension x="0" y="0"/></Offset>
           </Anchor>
         </Anchors>
         <Size>
