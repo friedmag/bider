@@ -744,7 +744,7 @@ function events:RaidCommand(args)
 end
 
 function events:SetCommand(args)
-  local var,val = strsplit(" ", args)
+  local var,val = strsplit(" ", args, 2)
   if var == nil or var == "" then
     for i,v in pairs(settings) do
       Print("Setting '" .. i .. "': " .. v)
